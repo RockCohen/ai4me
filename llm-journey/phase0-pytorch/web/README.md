@@ -1,8 +1,8 @@
 # 阶段 0 · Web 互动课程平台
 
 形式借鉴 [learn-claude-code](https://github.com/shareAI-lab/learn-claude-code)：
-**每章只加一个机制、按顺序递进、Web 多视图**（阅读 + 模拟器）。
-区别：learn-claude-code 的 web 需要 `npm install`，本平台**零依赖纯静态**——双击 `index.html` 即可，离线可用，进度存本机浏览器。
+**预备课 + 12 章递进、每章只加一个机制、Web 多视图**（阅读 + 模拟器）。
+区别：learn-claude-code 的 web 需要 `npm install`，本平台同样是 npm 项目（vite）——`npm install && npm run dev` 即可。
 
 ## 打开方式
 
@@ -24,6 +24,7 @@ web/
 ├── css/style.css
 └── js/
     ├── micrograd.js    # 浏览器版 Value 引擎（Python micrograd 的 JS 移植）+ 表达式解析 + SVG 计算图
+    ├── ladder.js       # 张量阶梯（c00 预备课：0维→4维逐级展开）
     ├── tensorsim.js    # 张量形状/广播可视化器（6 个预设，含报错案例）
     ├── autogradsim.js  # autograd 交互台（表达式 → 计算图 → 反向动画 → 累加演示）
     ├── trainer.js      # 迷你训练场（Value 引擎搭 MLP，实时决策边界 + loss 曲线 + 病灶开关 + 五件套单步）
@@ -36,6 +37,7 @@ web/
 
 | 章节 | 机制 | 模拟器 | 对应场次 |
 |---|---|---|---|
+| c00 张量、形状与 PyTorch | 多维表格直觉 | TensorLadder 阶梯 | 课前 |
 | c01 形状与广播 | broadcasting 末维对齐 | TensorSim | S1 |
 | c02 视图与内存共享 | view 零拷贝 | TensorSim | S1 |
 | c03 计算图与 backward | 动态建图 | AutogradSim | S2 |

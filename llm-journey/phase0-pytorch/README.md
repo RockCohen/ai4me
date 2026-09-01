@@ -4,7 +4,7 @@
 >
 > **⚡ 学习模式已切换为「AI 助学」互动式**：按场次推进、预测式实验、禁写区构建、答辩验收。
 > 操作手册 → **[AI助学手册.md](AI助学手册.md)**（9 个场次、每场操作单、prompt 卡直达）
-> Web 互动课程 → **[web/](web/)**（12 章 × 双视图；`cd web && npm install && npm run dev`，先玩模拟器再进 Python 实战）
+> Web 互动课程 → **[web/](web/)**（预备课 c00 + 12 章 × 双视图；`cd web && npm install && npm run dev`，先玩模拟器再进 Python 实战）
 
 ## 一、材料清单
 

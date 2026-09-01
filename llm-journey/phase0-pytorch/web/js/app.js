@@ -4,6 +4,7 @@ import { Quiz } from './quiz.js';
 import { TensorSim } from './tensorsim.js';
 import { AutogradSim } from './autogradsim.js';
 import { Trainer } from './trainer.js';
+import { TensorLadder } from './ladder.js';
 
 (function () {
   'use strict';
@@ -67,15 +68,15 @@ import { Trainer } from './trainer.js';
     main.innerHTML = `
       <div class="hero">
         <h1>阶段 0 · 互动课程</h1>
-        <p class="sub">PyTorch 基础 × micrograd 复现 —— 12 章递进，每章只加一个机制</p>
+        <p class="sub">PyTorch 基础 × micrograd 复现 —— 预备课 + 12 章递进，每章只加一个机制</p>
         <p>形式借鉴 <a href="https://github.com/shareAI-lab/learn-claude-code" target="_blank">learn-claude-code</a>：
         左侧章节按顺序学；每章有<b>阅读视图</b>（讲透一个机制 + 内嵌预测题）和<b>模拟器视图</b>（在浏览器里玩这个机制）。
         全部离线运行，进度存在本机浏览器里。</p>
         <p class="warn">模拟器是<b>预演</b>：真正的手感来自 Python 实战（<code>exercises/</code> 与 <code>tutor/</code>，
         场次安排见 <code>AI助学手册.md</code>）。学完一章 → 去对应场次动手 → 落库才算完成。</p>
-        <button class="primary" id="start-btn">从 c01 开始 →</button>
+        <button class="primary" id="start-btn">从预备课 c00 开始 →</button>
       </div>`;
-    document.getElementById('start-btn').onclick = () => { location.hash = '#/c01'; };
+    document.getElementById('start-btn').onclick = () => { location.hash = '#/c00'; };
   }
 
   // ---------- 章节页 ----------
@@ -85,7 +86,7 @@ import { Trainer } from './trainer.js';
         <div class="ch-title-row">
           <h1>${ch.id} · ${ch.title}</h1>
           <span class="badge">${ch.mech}</span>
-          <span class="badge s-badge">场次 ${S_MAP[ch.id] || ''}</span>
+          <span class="badge s-badge">${ch.id === 'c00' ? '⏱ 预备课 · 约 10 分钟' : '场次 ' + (S_MAP[ch.id] || '')}</span>
         </div>
         <div class="tabs">
           <button class="tab active" data-tab="read">📖 阅读</button>
@@ -122,6 +123,7 @@ import { Trainer } from './trainer.js';
       pane.appendChild(simHost);
       if (ch.sim.type === 'tensor') TensorSim.mount(simHost);
       else if (ch.sim.type === 'autograd') AutogradSim.mount(simHost);
+      else if (ch.sim.type === 'ladder') TensorLadder.mount(simHost);
       else if (ch.sim.type === 'trainer') Trainer.create().mount(simHost, ch.sim.cfg);
       pane.querySelectorAll('.tr-wrap, .ag-wrap, .ts-wrap').forEach(w => { w.style.maxWidth = '980px'; });
     }

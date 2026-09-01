@@ -7,7 +7,7 @@
 
 ## Web 互动课程（每场开动前的 10 分钟预演）
 
-`phase0-pytorch/web/` 下 `npm install && npm run dev` 后访问 http://localhost:5173。12 章互动课程与本章场次一一对应：
+`phase0-pytorch/web/` 下 `npm install && npm run dev` 后访问 http://localhost:5173。**预备课 c00 + 12 章**互动课程与本章场次一一对应（零基础先从 c00 的张量阶梯玩起）：
 每章 = **阅读视图**（讲透一个机制 + 内嵌预测题）+ **模拟器视图**（在浏览器里玩这个机制）。
 建议节奏：先玩对应章节的模拟器建立直觉 → 再来本场的 Python 实战 → 产出物落库。
 映射表见 [`web/README.md`](web/README.md)；c06–c08 对应的 S3/S4 是禁写区场次，web 只用于看机制跑起来的样子。
