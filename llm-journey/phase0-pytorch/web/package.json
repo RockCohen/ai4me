@@ -1,0 +1,15 @@
+{
+  "name": "llm-journey-phase0-web",
+  "private": true,
+  "version": "0.1.0",
+  "description": "阶段 0 互动课程平台（12 章 × 阅读/模拟器双视图）",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^8.2.2"
+  }
+}

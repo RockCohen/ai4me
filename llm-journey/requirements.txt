@@ -1,0 +1,7 @@
+# 阶段 0 依赖（Apple Silicon / MPS 后端）
+# ⚠️ 需使用 Python 3.11（d2l 1.0.3 锁定的 numpy 1.23.5 / scipy 1.10.1 无 3.12 预编译包）
+# 安装方式：python3.11 -m venv .venv && .venv/bin/pip install -r requirements.txt
+torch
+torchvision
+d2l==1.0.3        # 《动手学深度学习》配套工具包，含 jupyter、matplotlib、pandas 等
+ipykernel         # 在 jupyter 中注册本 venv 内核用
