@@ -23,10 +23,11 @@ export const CHAPTERS = [
 <p>Python 是厨房，PyTorch 是自动料理机——一个 <b>Python 库</b>（别人写好的工具包，<code>pip install</code> 装进来、<code>import torch</code> 就能用）。它干三件事：<b>张量运算</b>（加强版 Excel，还能调用 Mac 的 GPU）；<b>自动求导</b>（你算 y，它自动算梯度——c03 的主角）；把这两样拼成训练神经网络的标准零件（c09 的训练循环）。2019 年 PyTorch 团队在 NeurIPS 发表的论文标题起得很诚实：《PyTorch: An Imperative Style, High-Performance Deep Learning Library》——一个"命令式风格的高性能深度学习<b>库</b>"，不玄，就是库。</p>
 <p class="soul">🤔 留给你想：深度学习偏偏选中了"表格"（线性代数）作为母语，而不是别的数学分支。提示：想想"加法"和"乘法"在显卡上有多快。这个问题想通了，后面所有章节都会顺一点。</p>
 <details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
-<li>Goodfellow, Bengio & Courville,《Deep Learning》第 2 章（MIT Press，官网 <a href="https://www.deeplearningbook.org" target="_blank">deeplearningbook.org</a> 全书免费）</li>
-<li>Grant Sanderson（3Blue1Brown），《线性代数的本质》视频系列——全 YouTube 公认最直观的矩阵直觉课（<a href="https://www.3blue1brown.com/topics/linear-algebra" target="_blank">官方页面</a>）</li>
-<li>Paszke et al., <a href="https://arxiv.org/abs/1912.01703" target="_blank">PyTorch: An Imperative Style, High-Performance Deep Learning Library</a>, NeurIPS 2019</li>
-<li>李沐《动手学深度学习》第 2 章"预备知识"（<a href="https://zh.d2l.ai" target="_blank">zh.d2l.ai</a>，免费在线）</li>
+<li><b>Goodfellow, Bengio & Courville《Deep Learning》第 2 章</b>（MIT Press，<a href="https://www.deeplearningbook.org" target="_blank">deeplearningbook.org</a> 全书免费）。公认的"深度学习圣经"，作者阵容是三位图灵奖级人物；第 2 章把线性代数讲到"够用即走"，不逼你啃数学系教材——这正是本书成为入门标配的原因。</li>
+<li><b>Grant Sanderson（3Blue1Brown）《线性代数的本质》</b>（<a href="https://www.3blue1brown.com/topics/linear-algebra" target="_blank">官方页面</a>）。全 YouTube 公认最直观的矩阵课。看到第 4 集"矩阵乘法 = 变换的复合"，你会发现 c01 的 <code>@</code> 运算从此有了画面——矩阵不是数字方阵，是空间的搬运。</li>
+<li><b>Paszke et al.《PyTorch: An Imperative Style, High-Performance Deep Learning Library》</b>（<a href="https://arxiv.org/abs/1912.01703" target="_blank">NeurIPS 2019</a>）。只读引言即可：它解释了研究圈为什么集体选择 PyTorch——"定义即运行"，代码写下来就是计算图，和你的直觉同构。</li>
+<li><b>李沐《动手学深度学习》第 2 章</b>（<a href="https://zh.d2l.ai" target="_blank">zh.d2l.ai</a>）。中文世界最好的入门教材，配套视频由李沐亲讲；本书的代码环境就是 Jupyter，和你的 exercises 目录无缝衔接。</li>
+<li><b>延伸 · "张量"这个名字的来历</b>：它不是 AI 圈发明的。Ricci 与 Levi-Civita 在 1900 年创立张量演算，爱因斯坦 1915 年用它写下广义相对论场方程。深度学习只是借用了数学家的学究命名——你学的其实是大相对论用过的语言，只是用来搬图片。</li>
 </ul></details>`,
     quiz: [
       { q: '一张 28×28 的灰度图，用张量表示形状是？', kind: 'choice', options: [{ t: '(28, 28)', correct: true, why: '' }, { t: '(28, 1)', correct: false, why: '' }, { t: '28', correct: false, why: '' }], why: '2 维：高 × 宽，每个元素是一个亮度值。' },
@@ -52,10 +53,11 @@ export const CHAPTERS = [
 <p>为什么偏偏从末维开始对齐？因为内存是"一行接一行"平铺的，<b>最后一个维度是物理上最连续的方向</b>——从最连续的地方做对齐检查，拉伸起来最省事。右侧模拟器把 ①②③ 三个预设都点一遍：① 和 ② 只差一个维度，命运一个是 (3,4)、一个是报错。</p>
 <p class="soul">🤔 留给你想：广播拉伸是"逻辑复制"——不真复制。这个设计让一次 1TB 规模的运算跑进了 8GB 内存。请想想：省的是什么？什么时候它又必须真复制（提示：写结果需要地方放）？</p>
 <details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
-<li>NumPy 官方文档·Broadcasting（<a href="https://numpy.org/doc/stable/user/basics.broadcasting.html" target="_blank">numpy.org/doc → broadcasting</a>），PyTorch 广播语义与之一脉相承</li>
-<li>Harris et al., <a href="https://www.nature.com/articles/s41586-020-2649-2" target="_blank">Array programming with NumPy</a>, Nature 585 (2020)——NumPy 登上《自然》的正名之作</li>
-<li>CS231n（斯坦福）课程笔记 · Python/NumPy 教程（<a href="https://cs231n.github.io/" target="_blank">cs231n.github.io</a>）</li>
-<li>李沐《动手学深度学习》2.1 节·数据操作</li>
+<li><b>NumPy 官方文档 · Broadcasting</b>（<a href="https://numpy.org/doc/stable/user/basics.broadcasting.html" target="_blank">numpy.org/doc → broadcasting</a>）。"法条"的原文，配有逐步图例；PyTorch 官方文档明确声明广播语义与 NumPy 一致——学会这里，两个框架通用。</li>
+<li><b>Harris et al.《Array programming with NumPy》</b>（<a href="https://www.nature.com/articles/s41586-020-2649-2" target="_blank">Nature 585, 2020</a>）。一个"工具包"上《自然》的罕见案例：评审认定的不是 API，而是它对整个科学计算生态的承重作用。你正在学的正是这堵承重墙。</li>
+<li><b>CS231n 课程笔记 · Python/NumPy 教程</b>（<a href="https://cs231n.github.io/" target="_blank">cs231n.github.io</a>）。斯坦福李飞飞团队的入门标配，业内几乎人手读过；其中"广播的坑"一节是面试常客。</li>
+<li><b>延伸 · 为什么末维最连续？</b>内存一维平铺，NumPy/PyTorch 默认<b>行优先</b>（C order）：先排完一行再排下一行，所以末维在物理上相邻。Matlab、Julia、Fortran 是列优先——跨框架搬数据（尤其对接 MATLAB 遗产）时的经典暗坑，学术圈称为 C/Fortran order 之争。</li>
+<li><b>延伸 · 广播的远亲</b>：数据库的"隐式类型转换"、shell 的通配符，都是同一种设计哲学——"把用户的直觉摊开执行"。广播不是发明，是对直觉的工程化。</li>
 </ul></details>`,
     quiz: [
       { code: 'a = torch.ones(3, 4)\nb = torch.ones(4)\nprint((a + b).shape)', q: '输出形状是？', kind: 'choice', options: [{ t: '(3, 4)', correct: true, why: '' }, { t: '(3, 3)', correct: false, why: '' }, { t: '报错', correct: false, why: '' }], why: '(4,) 末维与 a 的末维 4 相等，前面补 1 拉伸 → (3,4)。' },
@@ -72,9 +74,10 @@ export const CHAPTERS = [
 <p>顺带一提：NumPy 因为这套设计足够重要，2020 年在《自然》杂志上发了论文——一个"工具包"上 Nature，因为它撑起了大半个科学计算世界。你正在学的不是某个 API，是这条生态地基的承重墙。</p>
 <p class="soul">🤔 留给你想：什么时候必须<b>真复制</b>？（<code>.clone()</code>、跨设备 <code>.to('mps')</code>、某些非连续内存的 <code>contiguous()</code>。）工程里"快"和"不出鬼"经常打架，你的取舍原则是什么？</p>
 <details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
-<li>Harris et al., <a href="https://www.nature.com/articles/s41586-020-2649-2" target="_blank">Array programming with NumPy</a>, Nature 585 (2020)——视图/步长（stride）机制的源头设计</li>
-<li>PyTorch 官方文档 · Tensor Views（pytorch.org/docs → tensor view）</li>
-<li>李沐《动手学深度学习》2.1 节·内存开销讨论</li>
+<li><b>Harris et al.《Array programming with NumPy》</b>（<a href="https://www.nature.com/articles/s41586-020-2649-2" target="_blank">Nature 585, 2020</a>）。视图/步长（stride）机制的源头设计；论文里"一块数据 + 多个解释方式"的图解值得打印贴墙。</li>
+<li><b>PyTorch 官方文档 · Tensor Views</b>（pytorch.org/docs → tensor views）。官方枚举了全部视图操作（view/reshape/transpose/expand…）。记住判据一句话：凡是"改说明书"的都免费，凡是"要新内存"的才付费。</li>
+<li><b>延伸 · <code>.contiguous()</code> 的存在理由</b>：transpose 之后数据在内存里"跳着走"，某些底层算子（尤其卷积）要求平铺连续——这时 PyTorch 才被迫真复制。这是"视图免费"唯一的账单，也是你未来某天遇到的 <code>.contiguous()</code> 报错的全部剧情。</li>
+<li><b>延伸 · 同一哲学的生态复制</b>：pandas 的视图式切片、数据库的物化视图、Git 的轻量分支——"改说明书，不搬数据"是整个软件世界的第一性原理之一。学的是张量，懂的是设计。</li>
 </ul></details>`,
     quiz: [
       { code: 'a = torch.arange(12).reshape(3, 4)\nb = a.view(4, 3)\nb[0, 0] = 99\nprint(a[0, 0])', q: '打印什么？', kind: 'number', answer: 99, why: 'view 共享内存。想独立副本要 a.clone().view(4,3)。' },
@@ -94,10 +97,12 @@ export const CHAPTERS = [
 <p>还有一个值得咂摸的经济学问题：求梯度为什么必须从输出往回走？往回走一遍，<b>所有</b>输入的梯度同时到手；顺着走（前向模式微分），每换一个输入就得重走一遍。变量成千上万、输出只有一个——反向，是唯一划算的方向。</p>
 <p class="soul">🤔 留给你想：链式法则高中就学过，为什么直到 1986 年才有人想到用它训练多层网络？（提示：差的不数学，是"怎么组织计算"——这也许能让你对'工程'二字肃然起敬。）</p>
 <details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
-<li>Rumelhart, Hinton & Williams, <a href="https://www.nature.com/articles/323533a0" target="_blank">Learning representations by back-propagating errors</a>, Nature 323 (1986)</li>
-<li>Andrej Karpathy（前 Tesla AI 总监）· <a href="https://www.youtube.com/watch?v=VMj-3S51tku" target="_blank">The spelled-out intro to neural networks and backpropagation</a>——本阶段代码主线的原片</li>
-<li>3Blue1Brown · 反向传播系列视频（神经网络第 3–4 集，官方页 <a href="https://www.3blue1brown.com/topics/neural-networks" target="_blank">3blue1brown.com</a>）</li>
-<li>CS231n 课程笔记 · Backprop（<a href="https://cs231n.github.io/optimization-2/" target="_blank">cs231n.github.io/optimization-2</a>）</li>
+<li><b>Rumelhart, Hinton & Williams《Learning representations by back-propagating errors》</b>（<a href="https://www.nature.com/articles/323533a0" target="_blank">Nature 323, 1986</a>）。正文只有 3 页，引用超过 5 万；今天读你会惊讶于它的朴素。续集更精彩：Hinton 因此项工作获 <b>2024 年诺贝尔物理学奖</b>（与 Hopfield 同享，表彰"以人工神经网络实现机器学习的基础性发现"）——当年被符号主义边缘化的想法，四十多年后拿了诺奖。</li>
+<li><b>Andrej Karpathy · The spelled-out intro to neural networks and backpropagation</b>（<a href="https://www.youtube.com/watch?v=VMj-3S51tku" target="_blank">YouTube</a>）。本阶段代码主线的"原片"：2.5 小时从空文件到训练网络，全是即兴手敲。禁写区结束后来二刷，你会看到完全不同的东西。</li>
+<li><b>3Blue1Brown · 神经网络系列第 3–4 集</b>（<a href="https://www.3blue1brown.com/topics/neural-networks" target="_blank">3blue1brown.com</a>）。Grant Sanderson 用"逐层追责"的比喻讲反向传播；先看动画建立画面，再写代码建立手感，两条记忆通道各管一段。</li>
+<li><b>CS231n 课程笔记 · Backprop</b>（<a href="https://cs231n.github.io/optimization-2/" target="_blank">cs231n.github.io/optimization-2</a>）。用"计算图上每个门的局部梯度"教学——和你正在写的 Value 类完全同构，术语可以直接对表。</li>
+<li><b>延伸 · 反向传播的前史</b>：它本质是"反向模式自动微分"。芬兰学生 Seppo Linnainmaa 在 1970 年的硕士论文里就提出了任意嵌套函数的自动求导，比神经网络应用早了 16 年——反向传播 = 反向模式微分 × 神经网络。伟大的应用常常不需要发明新数学，只需要把老数学接到新大陆。</li>
+<li><b>延伸 · 两个方向的经济学</b>：自动微分有前向/反向两种模式。输入多、输出少（训练场景），反向一遍全出，完胜；输入少、输出多（比如算雅可比行），前向反而占优。JAX 这类库两种都给你——工具不站队，问题说了算。</li>
 </ul></details>`,
     quiz: [
       { code: 'x = torch.tensor(2.0, requires_grad=True)\ny = x ** 3\ny.backward()\nprint(x.grad)', q: '打印什么？', kind: 'number', answer: 12, why: 'dy/dx = 3x² = 12。backward 把 ∂y/∂x 累加进 x.grad。' },
@@ -113,9 +118,11 @@ export const CHAPTERS = [
 <p>右侧实验：连续点两次「反向传播」，看 grad 变成 2 倍；点「清零梯度」恢复。S6 坏代码门诊的病灶①，病根就是这条禅语。</p>
 <p class="soul">🤔 留给你想：一个 API 设计问题——"框架替你做"和"把控制权交给你"，边界应该画在哪？PyTorch 的答案几乎处处是后者，这也是它赢下研究圈的原因之一。你同意吗？</p>
 <details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
-<li>Tim Peters, <a href="https://peps.python.org/pep-0020/" target="_blank">PEP 20 — The Zen of Python</a>（1999）</li>
-<li>Andrej Karpathy, <a href="https://karpathy.github.io/2019/04/25/recipe/" target="_blank">A Recipe for Training Neural Networks</a>（2019）——"大多数训练 bug 是静默的"这一警告的出处级文献</li>
-<li>PyTorch 官方文档 · Optimizer zero_grad()（pytorch.org/docs）</li>
+<li><b>Tim Peters《PEP 20 — The Zen of Python》</b>（<a href="https://peps.python.org/pep-0020/" target="_blank">peps.python.org/pep-0020</a>，1999）。只有 19 行的"社区宪法"，值得全文背下；PyTorch 的 API 品味（处处显式、处处 .grad 交给你管）深谙此道。</li>
+<li><b>Andrej Karpathy《A Recipe for Training Neural Networks》</b>（<a href="https://karpathy.github.io/2019/04/25/recipe/" target="_blank">karpathy.github.io, 2019</a>）。前 Tesla AI 总监的训练手记；"最常见的训练 bug 都是静默的"这一警告的出处级文献。本阶段第二必读，S9 答辩题源。</li>
+<li><b>PyTorch 官方文档 · zero_grad()</b>。细节控福利：新版默认 <code>set_to_none=True</code>——把梯度置 None 比置 0 更省一遍内存遍历。看，连"清零"这件事都在演进。</li>
+<li><b>延伸 · 累加的实战化身：梯度累积</b>。显存放不下大 batch？先累积 8 个小 batch 的梯度再一次 step，等效 batch ×8——这是大模型训练的日常操作。你今天抱怨的"麻烦特性"，明天是万亿参数模型的救命稻草。</li>
+<li><b>延伸 · "显式"的边界</b>：not 所有框架都这么倔——Keras 把清零藏进 fit() 里，好用但黑盒。两种设计哲学没有对错，只有"你在学什么"：Keras 教你用工具，PyTorch 教你工具的原理。本阶段选后者，是有意的。</li>
 </ul></details>`,
     quiz: [
       { code: 'x = torch.tensor(1.0, requires_grad=True)\ny = x * 2\ny.backward(retain_graph=True)\ny.backward(retain_graph=True)\nprint(x.grad)', q: 'x.grad 是多少？', kind: 'number', answer: 4, why: '2 + 2 = 4。两次 backward，梯度累加两次。' },
@@ -140,9 +147,11 @@ export const CHAPTERS = [
 <p>右侧模拟器是这个循环的实时可视化：点「训练」或「单步」，看绿线如何逼近黄点、w/b 如何爬向 3.00 / 1.00。把学习率调到 10——你会亲眼看到"步子太大"的高斯会怎么摔跤。</p>
 <p class="soul">🤔 留给你想：为什么是"平方"损失，而不是绝对值损失或四次方损失？（提示：平方在极值处可导、处处凸、还暗合"误差服从高斯分布"的最大似然假设——三个理由凑齐，它才坐稳了两百年。）</p>
 <details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
-<li>Galton, <i>Regression towards mediocrity in hereditary stature</i>, 1886——"回归"一词的出生证明</li>
-<li>Stephen Stigler,《The History of Statistics》(Harvard University Press)——最小二乘与谷神星的故事，史料的权威整理者</li>
-<li>李沐《动手学深度学习》第 3 章·线性回归（<a href="https://zh.d2l.ai" target="_blank">zh.d2l.ai</a>）</li>
+<li><b>Galton《Regression towards mediocrity in hereditary stature》</b>（1886）。"回归"的出生证明。有趣的后续：高尔顿研究的本意是遗传规律，却顺手发现了统计里最重要的现象之一——而且"相关不等于因果"这一课，他本人也差点没及格。科学常常如此，瞄准一个答案，捡回另一个。</li>
+<li><b>Stephen Stigler《The History of Statistics》</b>（Harvard University Press）。统计学史的权威整理者（统计里还有个"Stigler 定律"：凡以人名命名的定律，都不是那个人先提出的——它自己就是自己的例证）。谷神星那一章讲高斯如何从 41 天的观测外推轨道，普鲁士天文学家据此在除夕夜找回了这颗星。</li>
+<li><b>延伸 · 最小二乘的优先权大战</b>：Legendre 1805 年率先发表最小二乘法，高斯回信称自己 1795 年就在用，两位巨匠为此隔空互怼多年。教训绵延至今——<b>发表时间戳</b>在科学界是硬通货（这也是你坚持 git 提交历史的隐秘理由）。</li>
+<li><b>延伸 · Anscombe 四重奏（1973）</b>：统计学家 Francis Anscombe 造了四组数据——均值、方差、回归线完全相同，画出来却是四张完全不同的图。它一锤定音地立下规矩：<b>先画图，再算数</b>。右侧训练场的 loss 曲线，就是你的 Anscombe 四重奏。</li>
+<li><b>李沐《动手学深度学习》第 3 章</b>（<a href="https://zh.d2l.ai" target="_blank">zh.d2l.ai</a>）。线性回归从"损失函数怎么选"讲到"从零实现到简洁实现"，与本章双线互证。</li>
 </ul></details>`,
     quiz: [
       { q: '参数更新为什么必须包在 no_grad 里？', kind: 'text', why: '不包：对叶子张量的原地写直接报错（leaf Variable ... in-place operation）；即便绕过，更新本身也会被记进图，下一步 backward 会沿"参数更新"这条路径乱求导，且内存持续膨胀。' },
@@ -167,9 +176,10 @@ export const CHAPTERS = [
 <p>右侧交互台就是这套机制跑起来的样子：每个节点口袋里装着 data / grad / 运算名。</p>
 <p class="soul">🤔 留给你想：为什么不写一个巨大的 switch（加法走加法梯度、乘法走乘法梯度），而要让每个节点自带 _backward？——提示：哪个版本加一种新运算时不用改旧代码？</p>
 <details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
-<li>Abelson & Sussman,《Structure and Interpretation of Computer Programs》(MIT Press) 序言——"写给人读的程序"</li>
-<li>Andrej Karpathy · <a href="https://github.com/karpathy/micrograd" target="_blank">karpathy/micrograd</a> 仓库与<a href="https://www.youtube.com/watch?v=VMj-3S51tku" target="_blank">配套视频</a>（本仓库已内置副本）</li>
-<li>李沐论文精读系列（<a href="https://github.com/mli/paper-reading" target="_blank">github.com/mli/paper-reading</a>）——下一步读论文时的中文地图</li>
+<li><b>Abelson & Sussman《SICP》</b>（MIT Press，免费在线多处可读）。MIT 传奇课程 6.001 的教材，序言那句"程序是写给人读的"即出于此。第 3 章"模块化、对象与状态"是 <code>_backward</code> 闭包设计的思想老家——读完你会把"闭包"从背下来的词变成想明白的词。</li>
+<li><b>karpathy/micrograd 仓库与视频</b>（<a href="https://github.com/karpathy/micrograd" target="_blank">GitHub</a> / <a href="https://www.youtube.com/watch?v=VMj-3S51tku" target="_blank">YouTube</a>）。engine.py 一共约百行。建议隔几周重读一遍：每次你学会新东西，它都会显得更薄——这个"变薄"的速度，就是你入门速度的测量仪。</li>
+<li><b>延伸 · Karpathy《Software 2.0》</b>（2017，karpathy.github.io）。他把神经网络权重称为"新的编程方式"：软件 1.0 由人写规则，软件 2.0 喂数据让它长出程序。本阶段你在写 1.0 的代码，目的是看懂 2.0 的产物——这个视角会让你对"训练"二字肃然起敬。</li>
+<li><b>李沐论文精读清单</b>（<a href="https://github.com/mli/paper-reading" target="_blank">github.com/mli/paper-reading</a>）。从本阶段毕业后的"论文地图"：每篇都有中文视频笔记，按图索骥即可。</li>
 </ul></details>`,
     quiz: [
       { q: '加法节点的 _backward 闭包，为什么必须写 self.grad += out.grad 而不是 = ？', kind: 'text', why: '一个节点可能被多条路径使用（a*b + a*c）。+= 让多路径梯度汇合（乘积求导法则的"相加"项）；= 会被后一条路径覆盖。' },
@@ -197,9 +207,10 @@ export const CHAPTERS = [
 <p>右侧交互台的「反向传播」动画，亮灯顺序就是 reversed(topo)。请特别留意一件事：如果顺序错了，程序<b>不报错</b>，只是梯度悄悄错掉——"静默错误"这个词，你在 c10 还会再见到。</p>
 <p class="soul">🤔 留给你想：反向传播 = 链式法则（数学）+ 拓扑排序（调度）。为什么"伟大的算法"经常 = 一个老数学 + 一个朴素调度？你还能想到别的例子吗？（提示：FFT、动态规划。）</p>
 <details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
-<li>Donald Knuth,《The Art of Computer Programming》Vol.1——拓扑排序的经典论述</li>
-<li>Goodfellow et al.,《Deep Learning》第 6.5 节·计算图（<a href="https://www.deeplearningbook.org" target="_blank">deeplearningbook.org</a>）</li>
-<li>Andrej Karpathy · micrograd 视频（<a href="https://www.youtube.com/watch?v=VMj-3S51tku" target="_blank">YouTube</a>）第 40 分钟起对拓扑序的可视化讲解</li>
+<li><b>Donald Knuth《The Art of Computer Programming》Vol.1</b>。拓扑排序的经典论述；原书难啃，但这一节配练习可以拿下。Knuth 的原始动机朴素到可爱：给依赖关系排序（先修课、装配线、菜谱），和你今天给计算图排序是同一件事。</li>
+<li><b>Goodfellow et al.《Deep Learning》第 6.5 节 · 计算图</b>（<a href="https://www.deeplearningbook.org" target="_blank">deeplearningbook.org</a>）。"计算图"概念的教科书表述；把你手画的 micrograd 图与它对照，术语零障碍互通。</li>
+<li><b>延伸 · 一个算法的一生（1960s–2020s）</b>：1970 年 Linnainmaa 提出反向模式自动微分 → 1986 年进入神经网络（反向传播）→ 2012 年 AlexNet 引爆深度学习 → 2017 年 Hinton 公开说"也许该把反向传播扔掉重来"→ 2022 年他真的发表了替代方案 Forward-Forward（arXiv:2212.13345）。祖师爷反叛祖师爷法——算法也有完整的人生剧本。</li>
+<li><b>延伸 · 拓扑排序无处不在</b>：构建工具（make/webpack）的依赖编译、包管理器的安装顺序、电子表格的重算次序——全是它。学会"先想清楚谁依赖谁"，你就同时学会了编程与项目管理。</li>
 </ul></details>`,
     quiz: [
       { q: '顺序反了（正拓扑序调用 _backward）会怎样？', kind: 'text', why: '上游节点被调用时它的 out.grad 还没被下游写全，回传的是残缺梯度——程序不报错但数值错，比崩溃更难发现。' },
@@ -215,10 +226,11 @@ export const CHAPTERS = [
 <p>本章你亲手把这场平反跑起来。引擎（Value）已有，往上组装只是搭积木：<b>Neuron</b>（n 个权重 + 偏置 → 加权和 → 激活）、<b>Layer</b>（一排 Neuron）、<b>MLP</b>（一排 Layer），三者共享 <code>parameters()</code> 接口。训练循环和 c05 手写线性回归<b>一模一样</b>——变的只是 forward 的内容。右侧训练场每个权重都是真 Value 节点：点「训练」，看决策边界怎么长出来。</p>
 <p class="soul">🤔 留给你想：Minsky 当年的批评其实是对的（一层就是不行），但结论"此路不通"错了。科学史上这种"对的理由推出错的结论"，还能想到哪次？</p>
 <details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
-<li>《纽约时报》1958 年对 Rosenblatt 感知机的报道（"New Navy Device Learns By Doing"）</li>
-<li>Minsky & Papert,《Perceptrons》(MIT Press, 1969)——XOR 批评的原始文献</li>
-<li>Hornik, Stinchcombe & White, <i>Approximation capabilities of multilayer feedforward networks</i>, Neural Networks (1991)——万能近似定理</li>
-<li>3Blue1Brown · 神经网络系列第 4 集"网络如何学习"（<a href="https://www.3blue1brown.com/topics/neural-networks" target="_blank">3blue1brown.com</a>）</li>
+<li><b>《纽约时报》1958 年感知机报道</b>（"New Navy Device Learns By Doing"）。全文今天读来像科幻小说，却是当时一丝不苟的严肃新闻——科技泡沫的文体学标本。收藏它，下次任何技术被"革命性"形容时拿出来对照。</li>
+<li><b>Minsky & Papert《Perceptrons》</b>（MIT Press, 1969）。冷水泼得有理有据：单层感知机确实学不了 XOR。错的是从"一层不行"滑向"此路不通"——这一步滑出了长达十几年的 AI 寒冬。逻辑正确的批评 + 越界的结论，是科学史上最值得警惕的组合。</li>
+<li><b>Hornik, Stinchcombe & White《Approximation capabilities of multilayer feedforward networks》</b>（Neural Networks, 1991）。万能近似定理的通用证明。读摘要即可，但请读出两个小字：定理保证"存在这样的网络"，<b>不保证</b>学得到、也不保证宽度可行——"存在"与"可学"之间的鸿沟，正是深度学习三十年。</li>
+<li><b>3Blue1Brown · 神经网络第 4 集</b>（<a href="https://www.3blue1brown.com/topics/neural-networks" target="_blank">3blue1brown.com</a>）。梯度下降如何在一万维的"损失地形"里下山；和右侧训练场并排开着看。</li>
+<li><b>延伸 · Hinton 的 Forward-Forward</b>（arXiv:2212.13345, 2022）：图灵奖得主试图用"两次前向"替代反向传播，动机是怀疑反向传播在生物大脑里走不通。读新闻稿级别的摘要即可——围观"祖师爷反叛祖师爷法"，是理解一个算法局限性的最佳视角。</li>
 </ul></details>`,
     quiz: [
       { q: '隐层 [4] 训练双月牙和 [8,8] 有什么可感知差异？为什么？', kind: 'text', why: '[4] 容量小：边界更"直"，月牙交界处分不开、loss 更高。容量 ↔ 数据复杂度要匹配。' },
@@ -243,9 +255,10 @@ export const CHAPTERS = [
 <p>右侧训练场打开「单步」：每按一次只跑一个 batch，五件套面板高亮当前阶段。先看慢动作，再看直播——学动作的标准顺序，反了就懂不了。</p>
 <p class="soul">🤔 留给你想：loss 曲线满是锯齿，正常吗？（正常——那是 batch 间噪声。）由此推一步：曲线"看趋势不看单点"，这个读法能否推广到生活里一切含噪声的过程？</p>
 <details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
-<li>Andrej Karpathy, <a href="https://karpathy.github.io/2019/04/25/recipe/" target="_blank">A Recipe for Training Neural Networks</a>（2019）</li>
-<li>Jeremy Howard & fast.ai《Practical Deep Learning for Coders》——训练循环教学法的另一所名门（<a href="https://course.fast.ai" target="_blank">course.fast.ai</a>）</li>
-<li>李沐《动手学深度学习》第 4–5 章（<a href="https://zh.d2l.ai" target="_blank">zh.d2l.ai</a>）</li>
+<li><b>Andrej Karpathy《A Recipe for Training Neural Networks》</b>（<a href="https://karpathy.github.io/2019/04/25/recipe/" target="_blank">karpathy.github.io, 2019</a>）。被无数实验室当新员工手册的博客。第一节标题 <b>Don't be a hero</b>：先跑通最小管道，再逐步加复杂度——本阶段的每一次"先跑通再扩展"都是它的回声。</li>
+<li><b>fast.ai《Practical Deep Learning for Coders》</b>（<a href="https://course.fast.ai" target="_blank">course.fast.ai</a>）。Jeremy Howard 的"自上而下"教学法：第一课就训出可用模型，原理后补。它与李沐 d2l 的"自下而上"互为镜像——两种顺序都体验过，才算见过学习这件事的全貌。</li>
+<li><b>Smith et al.《Don't Decay the Learning Rate, Increase the Batch Size》</b>（<a href="https://arxiv.org/abs/1711.00489" target="_blank">arXiv:1711.00489</a>, 2017）。论证学习率与 batch size 可以互相代偿——这就是为什么大模型训练手册里这两个参数永远成对出现。S7 的变异实验（lr × batch）正是它的微缩版。</li>
+<li><b>延伸 · "五件套"的普适性</b>：去翻 GPT 级模型的训练日志，每个 step 依然是取数据 → 前向 → 清零 → 反向 → 更新。规模变了七八个数量级，骨架一个字没动——这就是"最小完备"的分量。</li>
 </ul></details>`,
     quiz: [
       { q: 'zero_grad 放在循环开头和放在 backward 前一行，有区别吗？放在 step 之后、下一轮 backward 之前呢？', kind: 'text', why: '前两者等价（关键是"下一次 backward 之前清掉"）；第三种写法语义上会把"刻意梯度累积"误清掉，且习惯上清零属于"为反向做准备"。' },
@@ -270,9 +283,11 @@ export const CHAPTERS = [
 <p>⚠️ 浏览器版用 tanh+MSE、纯 JS MLP 模拟，症状与你的 Python/Fashion-MNIST 版<b>同型不同值</b>。精确的数字指纹（如 bug2 第 2 步 6258）在 <code>tutor/bug_clinic/</code> 的 Python 脚本里——那里才是正式门诊。</p>
 <p class="soul">🤔 留给你想：5 个病灶里 3 个不报任何错。"静默失败"如何改变了工程方法论？（基线、可视化、单元验证、不相信"看起来在跑"。）这套方法论在你的本职工作里成立吗？</p>
 <details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
-<li>Andrej Karpathy, <a href="https://karpathy.github.io/2019/04/25/recipe/" target="_blank">A Recipe for Training Neural Networks</a>（2019）——" Neuroscience of debugging"级的必读</li>
-<li>Srivastava, Hinton et al., <a href="https://jmlr.org/papers/v15/srivastava14a.html" target="_blank">Dropout: A Simple Way to Prevent Neural Networks from Overfitting</a>, JMLR 2014</li>
-<li>Ioffe & Szegedy, Batch Normalization (arXiv:1502.03167, 2015)——eval/train 模式之分的另一半主角</li>
+<li><b>Andrej Karpathy《A Recipe for Training Neural Networks》</b>（<a href="https://karpathy.github.io/2019/04/25/recipe/" target="_blank">karpathy.github.io, 2019</a>）。本章方法论的原典。其中一招现在就能用：<b>overfit one batch</b>——先让模型死记一个 batch，若都做不到，代码必有 bug；能做到，再谈泛化。把大问题切成"能死的 smaller 问题"，是调试的一切。</li>
+<li><b>Srivastava, Hinton et al.《Dropout》</b>（<a href="https://jmlr.org/papers/v15/srivastava14a.html" target="_blank">JMLR 15, 2014</a>）。作者栏横跨 Hinton、Srivastava、Sutskever 一串传奇。数学本质一句话：每次随机丢神经元 = 训练指数多个子网络的共享集成——"合谋"自然无从谈起。</li>
+<li><b>Ioffe & Szegedy《Batch Normalization》</b>（arXiv:1502.03167, 2015）。train/eval 模式之分的另一半主角（BN 的训练期统计量与推理期滑动平均）；深度学习史上被引用最多的论文之一。S8 之后你会频繁与它打交道。</li>
+<li><b>延伸 · 银行柜员轶事的完整版</b>：Hinton 在多个访谈（如 2014 年 NPR）里讲过——他去银行发现柜员总在轮换，想到"轮换让单个员工难以与其余人合谋作弊"，于是有了随机丢弃。顶级研究者的直觉常常来自生活的比喻，而非论文。</li>
+<li><b>延伸 · "静默失败"的通用免疫</b>：先立基线 → 只改一个变量 → 读数说话。这套纪律不止护佑炼丹，任何"复杂系统 + 噪声"的领域（后端压测、A/B 实验、投资复盘）通用。</li>
 </ul></details>`,
     quiz: [
       { q: '5 个病灶里哪几个不报任何错？这对排错方法论意味着什么？', kind: 'text', why: '①③⑤（加上症状轻微的④）。深度学习的大部分 bug 是"静默错误"——不崩溃、只变差。所以要有 baseline 对照、要会读 loss 曲线形态，而不是等报错。' },
@@ -293,9 +308,11 @@ export const CHAPTERS = [
 </ol>
 <p class="soul">🤔 留给你想：你在 c05–c10 建立的直觉（累加、步长、静默 bug、容量）马上要接受"分钟级训练"的检验。预测一下：哪个直觉会在真实数据上最走样？为什么？（预测本身就是本章要练的能力。）</p>
 <details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
-<li>LeCun, Bottou, Bengio & Haffner, <i>Gradient-based learning applied to document recognition</i>, Proceedings of the IEEE (1998)——MNIST 出生证明</li>
-<li>Xiao, Rasul & Vollgraf, <a href="https://arxiv.org/abs/1708.07747" target="_blank">Fashion-MNIST: a Novel Image Dataset for Benchmarking Machine Learning Algorithms</a> (2017)</li>
-<li>李沐《动手学深度学习》3.5–3.7 节（<a href="https://zh.d2l.ai" target="_blank">zh.d2l.ai</a>）</li>
+<li><b>LeCun, Bottou, Bengio & Haffner《Gradient-based learning applied to document recognition》</b>（<a href="http://yann.lecun.com/exdb/publis/pdf/lecun-98.pdf" target="_blank">Proceedings of the IEEE, 1998</a>）。MNIST 出生证明，PDF 至今挂在 LeCun 个人主页。注意作者栏：Bengio 也在——三位后来的图灵奖得主，1998 年就在同框研究"读数字"这种"小事"。</li>
+<li><b>Xiao, Rasul & Vollgraf《Fashion-MNIST》</b>（<a href="https://arxiv.org/abs/1708.07747" target="_blank">arXiv:1708.07747</a>, 2017）。Zalando 团队的短论文；附录里有"为什么换掉 MNIST"的用户调研。顺带一提：它的 GitHub README 是开源数据集文案的范本，写文档时值得抄作业。</li>
+<li><b>延伸 · Goodhart 定律</b>：经济学家 Charles Goodhart 1975 年提出，人类学家 Strathern 的转述版最流行——<b>"当一个度量变成目标，它就不再是一个好度量。"</b>MNIST 刷到 99.7% 后失去信息量，KPI 压垮团队，算法推荐污染内容……全是它在 ML 之外的投影。</li>
+<li><b>延伸 · 数据集也会退休</b>：如今各大榜单位已难觅 MNIST 踪影，而教科书仍在用它。这不是矛盾——教材用经典保证可比性，前沿用真实保证含金量。你从 Fashion-MNIST 毕业、进入阶段 3 的中文指令数据集时，会再经历一次同样的"换代"。</li>
+<li><b>李沐《动手学深度学习》3.5–3.7 节</b>（<a href="https://zh.d2l.ai" target="_blank">zh.d2l.ai</a>）。softmax 回归与 Fashion-MNIST 的标准流水线，本章作战地图的详细版。</li>
 </ul></details>`,
     quiz: [
       { q: '为什么调参实验必须"先预测再运行"？', kind: 'text', why: '预测 = 强制调用已有心智模型；对错都会立刻校准它。只跑不预测，跑了也白跑——你看不出结果是在印证还是反驳你的理解。' },
@@ -315,9 +332,10 @@ export const CHAPTERS = [
 <p>下一站：阶段 1，从空文件手写一个能生成文本的 GPT。费曼那行黑板的下一个词，你会亲手创造出来。</p>
 <p class="soul">🤔 留给你想：AI 时代，"能查到"和"会"的边界在哪里？一个可操作的定义：当工具不在时你剩下来的东西。你的"剩下来的东西"，现在有多少了？</p>
 <details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
-<li>Richard Feynman 的黑板留言（Caltech，1988）——"What I cannot create, I do not understand"</li>
-<li>Roediger & Karpicke, <i>Test-Enhanced Learning</i>, Psychological Science (2006)——testing effect 的标志性实验</li>
-<li>Andrej Karpathy · <a href="https://karpathy.github.io/2019/04/25/recipe/" target="_blank">A Recipe for Training Neural Networks</a>——答辩问题的一大题源</li>
+<li><b>费曼的 Caltech 黑板（1988）</b>。那行"我造不出的东西，就代表我不懂"只是黑板上的一句话——旁边还写着另一条未竟清单："Know how to solve every problem that has been solved"（搞懂每一个已被解决的问题）。天才的谦逊，是以"已解决"为下限的。这块黑板的照片至今流传，值得设成壁纸。</li>
+<li><b>Roediger & Karpicke《Test-Enhanced Learning》</b>（Psychological Science, 2006）。两组学生：反复阅读 vs 合上书自测。一周后，自测组的记忆保持显著更高——"考试"从测量的手段变成了学习的手段。脱稿演练 = 把自己当实验组。</li>
+<li><b>swyx《Learn In Public》</b>（swyx.io 上的名篇）。把学习过程公开成博客、笔记、仓库：既倒逼理解，又积累作品集，还可能帮到陌生人——一鱼三吃。你的 llm-journey 仓库就是它的实践版；本阶段结束去 Push 到 GitHub，就是第一次公开学习。</li>
+<li><b>Andrej Karpathy《A Recipe for Training Neural Networks》</b>（<a href="https://karpathy.github.io/2019/04/25/recipe/" target="_blank">karpathy.github.io</a>）。答辩 10 问的一大题源；第三遍读它时，试着挑出一处你不同意的地方——这是超越教材的标志。</li>
 </ul></details>`,
     quiz: [
       { q: '为什么"跟 AI 学得很顺"反而是危险信号？', kind: 'text', why: '流畅性错觉：AI 的讲解和补全让每一步都很顺，但生成没发生在你身上。检验标准只有一个：断掉 AI 后你还能不能产出。' },
