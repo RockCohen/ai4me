@@ -176,6 +176,25 @@ main { flex: 1; padding: 30px 40px 60px; max-width: 1140px; min-width: 0; }
 .read .mini-table th, .read .mini-table td { border-bottom: 1px solid rgba(255,255,255,0.07); padding: 8px 14px; text-align: left; }
 .read .mini-table tr:last-child td { border-bottom: none; }
 .read .mini-table th { color: var(--dim); font-weight: 500; background: rgba(255,255,255,0.05); }
+.read .soul {
+  margin-top: 20px; padding: 12px 16px;
+  border: 1px solid rgba(201, 184, 255, 0.28); border-left: 3px solid #c9b8ff;
+  background: rgba(201, 184, 255, 0.07); border-radius: 14px;
+  color: rgba(235,242,255,0.85);
+}
+.read details.refs {
+  margin-top: 16px; border: 1px solid var(--glass-border);
+  border-radius: 14px; background: rgba(255,255,255,0.04); max-width: 780px;
+}
+.read details.refs summary {
+  cursor: pointer; padding: 11px 16px; color: var(--accent2);
+  font-size: 13.5px; font-weight: 600; list-style: none; user-select: none;
+}
+.read details.refs summary::-webkit-details-marker { display: none; }
+.read details.refs summary::before { content: '▸ '; }
+.read details.refs[open] summary::before { content: '▾ '; }
+.read details.refs ul { margin: 0; padding: 2px 22px 14px 30px; }
+.read details.refs li { font-size: 13px; color: var(--dim); margin: 6px 0; }
 
 /* ---------- 预测题卡片 ---------- */
 .quiz-title { margin: 30px 0 12px; color: var(--accent); font-size: 16px; }
