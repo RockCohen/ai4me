@@ -342,7 +342,7 @@ export const CHAPTERS = [
       { q: '为什么调参实验必须"先预测再运行"？', kind: 'text', why: '预测 = 强制调用已有心智模型；对错都会立刻校准它。只跑不预测，跑了也白跑——你看不出结果是在印证还是反驳你的理解。' },
       { q: 'batch=32 和 batch=256，同 lr 下 loss 曲线的"锯齿"有什么不同？', kind: 'text', why: '小 batch 噪声大（锯齿粗）但同步数下更新次数多、往往初期降得快；大 batch 曲线平滑但探索性弱。锯齿是梯度噪声的可视化。' },
     ],
-    sim: null,
+    sim: { type: 'mnist' },
   },
   {
     id: 'c12', group: '阶段 0 · 训练循环', title: '脱稿验收', mech: '断 AI 演练 + 考官制',
@@ -366,7 +366,7 @@ export const CHAPTERS = [
       { q: '为什么"跟 AI 学得很顺"反而是危险信号？', kind: 'text', why: '流畅性错觉：AI 的讲解和补全让每一步都很顺，但生成没发生在你身上。检验标准只有一个：断掉 AI 后你还能不能产出。' },
       { q: '答辩时"讲清"的标准是什么？（提示：不是背定义）', kind: 'text', why: '能从第一性原理推出、能举出反例/边界情况、能把概念落到自己写过的某行代码上。三条缺一，就还有误解没挖出来。' },
     ],
-    sim: { type: 'trainer', cfg: { mode: 'classify', dataset: 'xor', hidden: [8], lr: 0.5 } },
+    sim: { type: 'gradetool' },
   },
 
   // ============ 组 E · 阶段 1：Transformer ============
@@ -448,7 +448,7 @@ export const CHAPTERS = [
       { q: 'NLP 里选 LayerNorm 而非 BatchNorm 的原因？', kind: 'text', why: '序列长度可变、batch 内句子互不相关，按批统计不稳定；LN 对每个 token 自己的特征维归一化，与批大小、长度解耦。' },
       { q: 'GPT 系用的是 Pre-LN 还是 Post-LN？', kind: 'choice', options: [{ t: 'Pre-LN（LN 放在子层之前）', correct: true, why: '' }, { t: 'Post-LN（原始论文的做法）', correct: false, why: '' }], why: 'GPT-2 起改用 Pre-LN，深网络训练更稳；原始 Transformer 论文是 Post-LN——抄论文时要分清抄的是哪一版。' },
     ],
-    sim: null,
+    sim: { type: 'lncalc' },
   },
   {
     id: 'c17', group: '阶段 1 · Transformer', title: '组装：字符级 GPT 全景', mech: '嵌入 → L×Block → LN → lm_head',
@@ -525,7 +525,7 @@ model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen2.5-0.5B")  # ② 读 con
       { q: 'config.json 里存的是什么？权重存在哪？', kind: 'text', why: 'config = 架构超参（层数/头数/词表大小）；权重在 model.safetensors（或分片文件）。from_pretrained 两样都要读。' },
       { q: '为什么新模型都用 safetensors 而不是老的 pickle 格式？', kind: 'text', why: 'pickle 加载即执行任意代码（恶意模型可以借此攻击你）；safetensors 是纯数据格式，只能被读，不能被执行。' },
     ],
-    sim: null,
+    sim: { type: 'modelsim' },
   },
   {
     id: 'c20', group: '阶段 2 · Hugging Face', title: 'pipeline 与精细控制', mech: '三行推理 vs AutoModel 组装',
@@ -558,7 +558,7 @@ print(tok.decode(out[0], skip_special_tokens=True))           # id → 文字</p
       { q: 'pipeline 第一个参数是什么？第二个通常是什么？', kind: 'text', why: '任务名（如 "text-generation"）+ 模型名（Hub id 或本地路径）。可选 device 指定推理设备。' },
       { q: 'AutoTokenizer 和 AutoModel 为什么要"成对"从同一个模型名加载？', kind: 'text', why: 'tokenizer 的词表与模型的嵌入矩阵严格对应（c19），错配 = id 含义全错，模型输出乱码。' },
     ],
-    sim: null,
+    sim: { type: 'pipelinepeek' },
   },
   {
     id: 'c21', group: '阶段 2 · Hugging Face', title: '解码策略全家桶', mech: 'temperature / top-k / top-p',
@@ -615,7 +615,7 @@ GPT（单向，CLM）  ：只看「北京是中国的」→ 预测下一个词�
       { q: 'BERT 为什么天然不适合"生成"？', kind: 'text', why: 'MLM 双向训练：每个位置都看得到全文（包括"未来"）。自回归生成要求严格单向——BERT 的注意力里没有因果掩码。' },
       { q: '[MASK] 在 BERT 里扮演什么角色？', kind: 'text', why: '训练时随机遮 15% 的词强制模型用上下文双向推断——"完形填空"是它的训练信号，也是它理解力的来源。' },
     ],
-    sim: null,
+    sim: { type: 'maskview' },
   },
   {
     id: 'c23', group: '阶段 2 · Hugging Face', title: '上下文窗口与成本', mech: 'context length 与 token 计费',
@@ -646,7 +646,7 @@ GPT（单向，CLM）  ：只看「北京是中国的」→ 预测下一个词�
       { q: '十轮对话后 API 成本为什么远超十倍单轮？', kind: 'text', why: '每轮都把全部历史重发一遍：第 n 轮的输入 ≈ 前 n-1 轮的总量 → 总成本随轮数近似平方增长。' },
       { q: '上下文窗口限制的物理本质是什么？（阶段 4 会展开）', kind: 'text', why: 'KV cache 显存：每个 token 的 K/V 都要在显存里住着供注意力查询——窗口 = 显存能养得起多少 token。' },
     ],
-    sim: null,
+    sim: { type: 'chatcost' },
   },
 
   // ============ 组 G · 阶段 3：微调 ============
@@ -721,7 +721,7 @@ GPT（单向，CLM）  ：只看「北京是中国的」→ 预测下一个词�
       { q: '指令数据集的三栏格式是？哪一栏可选？', kind: 'text', why: 'instruction（任务）+ input（可选输入）+ output（期望输出）。无输入任务（如"翻译这句话"）input 留空。' },
       { q: '为什么"几百条高质量"能胜过"几万条平庸"？', kind: 'text', why: '微调校准的是行为模式而非知识；坏示例的毒性会放大，模型模仿的是你给的样子，不是你想要的样子。' },
     ],
-    sim: null,
+    sim: { type: 'dsbuilder' },
   },
   {
     id: 'c27', group: '阶段 3 · 微调', title: '双轨工具链', mech: 'MLX 本机 + Colab 云端',
@@ -749,7 +749,7 @@ trainer = SFTTrainer(model=..., train_dataset=..., peft_config=...)</pre>
       { q: '本机 MLX 与 Colab 各自的定位一句话？', kind: 'text', why: 'MLX：小模型、本机、免费随时跑，重在理解原理；Colab：CUDA 工业栈、7B QLoRA，重在见识标准流程。' },
       { q: '为什么建议 LLaMA-Factory 先行、裸代码随后？', kind: 'text', why: '全局感先行：知道端到端有哪些环节，再逐个深挖——避免在第一环就迷失于细节。' },
     ],
-    sim: null,
+    sim: { type: 'cmdgen' },
   },
 
   // ============ 组 H · 阶段 4：推理 ============
@@ -825,7 +825,7 @@ trainer = SFTTrainer(model=..., train_dataset=..., peft_config=...)</pre>
       { q: '"OpenAI 兼容接口"为什么重要？', kind: 'text', why: '统一 HTTP 方言让客户端与推理后端解耦：本地 Ollama、云端 vLLM、商业 API 换着用，代码零修改。' },
       { q: '量化对比实验要记录的两组数据是什么？', kind: 'text', why: '速度（tokens/s，同问题同设备）与质量（可感知差异点：数学/连贯性/指令遵循），各留具体例子。' },
     ],
-    sim: null,
+    sim: { type: 'inferest' },
   },
 
   // ============ 组 I · 阶段 5：项目 ============
@@ -849,7 +849,7 @@ trainer = SFTTrainer(model=..., train_dataset=..., peft_config=...)</pre>
       { q: '阶段 5 项目不可缺的四环是？', kind: 'text', why: '数据准备 → 模型环节 → 服务封装 → 交付（README + 演示）。砍需求不砍环节。' },
       { q: '"数据先行"防的是什么风险？', kind: 'text', why: '模型环节返工时不牵连数据——数据是项目的锚，模型只是可替换的实现。' },
     ],
-    sim: null,
+    sim: { type: 'topicpick' },
   },
   {
     id: 'c32', group: '阶段 5 · 项目', title: 'RAG：检索增强的骨架', mech: '查询 → 检索 → 拼prompt → 生成',
@@ -898,6 +898,6 @@ def chat(req: ChatRequest):
       { q: 'README 五要素是？哪一条最加分？', kind: 'text', why: '动机、数据、方法、效果对比、已知限制。"已知限制"最加分——诚实的边界感是工程成熟度的信号。' },
       { q: '验收的"十分钟复现"测试怎么执行？', kind: 'text', why: '找未参与的人，只给 README + 仓库链接，计时走完全流程；卡点 = README 的修改清单。' },
     ],
-    sim: null,
+    sim: { type: 'delivery' },
   },
 ];

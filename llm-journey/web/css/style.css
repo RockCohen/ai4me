@@ -349,6 +349,42 @@ main { flex: 1; padding: 30px 40px 60px; max-width: 1140px; min-width: 0; }
 .lr-params { font-size: 13.5px; }
 .lr-params b { color: var(--accent); }
 
+/* ---------- 12 章专属工具 ---------- */
+.gt-timer { font-size: 44px; font-weight: 750; font-family: ui-monospace,monospace; color: var(--accent); text-align: center; padding: 8px 0 2px; }
+.gt-timer.warn { color: var(--orange); }
+.gt-panel, .dv-panel { min-width: 380px; }
+.gt-bonus-card { background: rgba(255,184,107,0.1); border: 1px solid rgba(255,184,107,0.35); border-radius: 12px; padding: 10px 14px; color: var(--orange); font-size: 13.5px; }
+.gt-timeup { color: var(--bad); }
+.tr-bug.ok { color: var(--good); }
+.ln-sliders { display: flex; flex-direction: column; gap: 2px; max-height: 180px; overflow-y: auto; }
+.md-config { font-size: 12px; margin: 0; }
+.md-tree { font-size: 12.5px; line-height: 1.9; margin: 0; padding: 12px 16px; white-space: pre-wrap; }
+.md-note, .ld-name { font-size: 13.5px; }
+.ld-name { font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+.pp-stage { border: 1px solid var(--glass-border); border-radius: 12px; margin: 10px 14px; padding: 10px 14px; }
+.pp-stage-name { font-weight: 650; color: var(--accent); }
+.pp-stage-name i { font-style: normal; font-weight: 400; color: var(--dim); font-size: 12px; margin-left: 8px; }
+.pp-stage-body { font-size: 13.5px; margin-top: 4px; }
+.pp-pick { color: var(--accent); font-size: 16px; }
+.pp-text { color: #fff; }
+.mv-info { font-size: 13.5px; }
+.cc-table b { color: var(--accent); }
+.ds-panel { min-width: 380px; }
+.ds-item { border-bottom: 1px solid rgba(255,255,255,0.07); padding: 9px 2px; }
+.ds-item-head { display: flex; justify-content: space-between; align-items: center; }
+.ds-gold { color: var(--orange); font-size: 12px; font-weight: 600; }
+.ds-del { border: none; background: none; color: var(--dim); cursor: pointer; padding: 0 4px; }
+.ds-del:hover { color: var(--bad); }
+.ds-stats { font-size: 13px; }
+.ds-stats b { color: var(--accent); }
+.cg-panel, .tp-panel, .ie-out { min-width: 0; }
+.cg-cmd { font-size: 12.5px; line-height: 1.7; margin: 12px 16px; white-space: pre-wrap; }
+.cg-panel { flex: 1; }
+.tp-step { padding: 7px 4px; font-size: 13.5px; border-bottom: 1px dashed rgba(255,255,255,0.08); }
+.tp-out .ld-name { margin-top: 10px; }
+.ie-out { font-size: 13.5px; }
+.ie-out b { color: var(--accent); font-family: ui-monospace,monospace; }
+
 @media (max-width: 900px) {
   .layout { flex-direction: column; padding: 12px; }
   .sidebar { width: 100%; height: auto; position: static; }

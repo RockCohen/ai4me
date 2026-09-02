@@ -14,6 +14,18 @@ import { QuantSim } from './quant.js';
 import { MoESim } from './moe.js';
 import { KVSim } from './kvcache.js';
 import { RAGSim } from './rag.js';
+import { MNISTSim } from './mnistsim.js';
+import { GradeTool } from './gradetool.js';
+import { LNCalc } from './lncalc.js';
+import { ModelSim } from './modelsim.js';
+import { PipelinePeek } from './pipelinepeek.js';
+import { MaskView } from './maskview.js';
+import { ChatCost } from './chatcost.js';
+import { DSBuilder } from './dsbuilder.js';
+import { CmdGen } from './cmdgen.js';
+import { InferEst } from './inferest.js';
+import { TopicPick } from './topicpick.js';
+import { Delivery } from './delivery.js';
 
 (function () {
   'use strict';
@@ -142,6 +154,18 @@ import { RAGSim } from './rag.js';
       else if (ch.sim.type === 'moe') MoESim.mount(simHost);
       else if (ch.sim.type === 'kvcache') KVSim.mount(simHost);
       else if (ch.sim.type === 'rag') RAGSim.mount(simHost);
+      else if (ch.sim.type === 'mnist') MNISTSim.mount(simHost);
+      else if (ch.sim.type === 'gradetool') GradeTool.mount(simHost);
+      else if (ch.sim.type === 'lncalc') LNCalc.mount(simHost);
+      else if (ch.sim.type === 'modelsim') ModelSim.mount(simHost);
+      else if (ch.sim.type === 'pipelinepeek') PipelinePeek.mount(simHost);
+      else if (ch.sim.type === 'maskview') MaskView.mount(simHost);
+      else if (ch.sim.type === 'chatcost') ChatCost.mount(simHost);
+      else if (ch.sim.type === 'dsbuilder') DSBuilder.mount(simHost);
+      else if (ch.sim.type === 'cmdgen') CmdGen.mount(simHost);
+      else if (ch.sim.type === 'inferest') InferEst.mount(simHost);
+      else if (ch.sim.type === 'topicpick') TopicPick.mount(simHost);
+      else if (ch.sim.type === 'delivery') Delivery.mount(simHost);
       else if (ch.sim.type === 'trainer') Trainer.create().mount(simHost, ch.sim.cfg);
       pane.querySelectorAll('.tr-wrap, .ag-wrap, .ts-wrap').forEach(w => { w.style.maxWidth = '980px'; });
     }
