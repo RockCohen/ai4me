@@ -1,7 +1,7 @@
 # 阶段 0 · Web 互动课程平台
 
 形式借鉴 [learn-claude-code](https://github.com/shareAI-lab/learn-claude-code)：
-**预备课 + 12 章递进、每章只加一个机制、Web 多视图**（阅读 + 模拟器）。
+**预备课 + 阶段 0/1 共 18 章递进、每章只加一个机制、Web 多视图**（阅读 + 模拟器）。
 区别：learn-claude-code 的 web 需要 `npm install`，本平台同样是 npm 项目（vite）——`npm install && npm run dev` 即可。
 
 ## 打开方式
@@ -50,6 +50,13 @@ web/
 | c10 坏代码门诊 | 5 病灶开关 | TrainerSim(病灶) | S6 |
 | c11 真实数据 Fashion-MNIST | 全流程 | （回 Python） | S7 |
 | c12 脱稿验收 | 断 AI + 考官制 | （回 Python） | S8·S9 |
+| **阶段 1 · Transformer** ||||
+| c13 分词：文本如何变成数字 | 字符级/词级/BPE | TokenizerSim | S10 |
+| c14 注意力：Q/K/V | softmax(QKᵀ/√d)V | AttentionSim | S10 |
+| c15 多头注意力 | H 个独立投影 | AttentionSim（双头） | S10 |
+| c16 Block：残差与 LayerNorm | 残差 + LN | （阅读 + 预测题） | S11 |
+| c17 组装：字符级 GPT 全景 | 嵌入→L×Block→lm_head | ShapeSim 形状追踪 | S12·S13 |
+| c18 生成：温度与 top-k | 采样解码 | SamplerSim（现训 bigram） | S13 |
 
 ## 边界说明（诚实条款）
 

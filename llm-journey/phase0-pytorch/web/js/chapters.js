@@ -343,4 +343,131 @@ export const CHAPTERS = [
     ],
     sim: { type: 'trainer', cfg: { mode: 'classify', dataset: 'xor', hidden: [8], lr: 0.5 } },
   },
+
+  // ============ 组 E · 阶段 1：Transformer ============
+  {
+    id: 'c13', group: 'Transformer', title: '分词：文本如何变成数字', mech: '字符级 / 词级 / BPE',
+    read: `
+<p>阶段 1 的终点是一个"会写文章"的模型。但神经网络只吃数字（c00 的阶梯），于是第一个问题来了：<b>"文章"怎么变成数字？</b>这就是分词（tokenization）——它决定了模型世界的"原子"是什么。</p>
+<p>右侧模拟器把同一段中英混排文本分别按<b>字符级</b>和<b>词级</b>切分：字符级把英文拆成单字母（序列很长但没有生词问题），词级切英文不错但中文粘连、"cat / cats"互不相认、生词直接词表外。Karpathy 的<a href="https://www.youtube.com/watch?v=kCc8FmEb1nY" target="_blank">《Let's build GPT》</a>开篇就选了最朴素的字符级——先跑通，再优化。</p>
+<p>GPT 真正用的是 <b>BPE</b>（字节对编码）：高频片段合并成 token、生词自动退回字符，在"序列长度"和"词表大小"之间动态找平衡。S16 的选做练习 minbpe 就是亲手实现它——大约 100 行。</p>
+<p class="soul">🤔 留给你想：token 是模型的"世界观单位"。字符级模型眼里没有"词"，只有字符的排列。这对它理解语言是帮助还是阻碍？（提示：想想你背英语单词时"背字母"和"背词根"的区别。）</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>Andrej Karpathy《Let's build GPT》</b>（<a href="https://www.youtube.com/watch?v=kCc8FmEb1nY" target="_blank">YouTube, 2023</a>）。阶段 1 的原片；开篇 20 分钟讲 bigram 与分词，后面逐行搭出完整 GPT。</li>
+<li><b>karpathy/minbpe</b>（<a href="https://github.com/karpathy/minbpe" target="_blank">GitHub</a>）。约百行的极简 BPE 实现，S16 选做材料；README 本身就是一篇好教程。</li>
+<li><b>Sennrich et al.《Neural Machine Translation of Rare Words with Subword Units》</b>（<a href="https://arxiv.org/abs/1508.07909" target="_blank">arXiv:1508.07909</a>, 2015）。把 BPE 引入神经翻译的原始论文——"子词"思想的学术起点，比 GPT 早了三年。</li>
+<li><b>延伸 · token 是钱</b>：API 按 token 计费、上下文窗口按 token 计长（GPT-4 约 8K–1M）。学完 BPE 你就能自己估算"一段话值多少钱"。</li>
+</ul></details>`,
+    quiz: [
+      { q: '一篇 1000 字的中文文章按字符级分词，大约是多少个 token？', kind: 'number', answer: 1000, tol: 50, why: '字符级下中文 ≈ 一字一 token。这也是为什么同样内容，中文 token 数常比英文少（信息密度更高）。' },
+      { q: '词级分词（按空格切）最大的两个问题是什么？', kind: 'text', why: '词表爆炸（每种词形变化都要一个条目）与词表外生词（OOV）无解。中文更是连空格都没有。' },
+      { q: 'BPE 的核心思想一句话？', kind: 'text', why: '从字符开始，反复把最高频的相邻对合并成新 token——高频词长成整词，生词退回字符，词表与序列长度自动平衡。' },
+    ],
+    sim: { type: 'tokenizer' },
+  },
+  {
+    id: 'c14', group: 'Transformer', title: '注意力：Q/K/V', mech: 'softmax(QKᵀ/√d)·V',
+    read: `
+<p>注意力机制的出生证明其实比 Transformer 早三年：2014 年 Bahdanau 等人在机器翻译论文里提出——翻译每个词时，"回头看"原文的相关词并按相关度加权。2017 年《Attention Is All You Need》走得更狠：<b>把整个模型全部换成注意力</b>，标题即宣言。李沐的论文精读（B 站）就是照着这篇讲的。</p>
+<p>机制一句话：每个 token 发出三种向量——<b>Query（我在找什么）</b>、<b>Key（我是什么标签）</b>、<b>Value（我的内容）</b>。Q 与所有 K 做点积 = 相关度打分；除以 √d 缩放后 softmax 成权重；再按权重混合所有 V：<code>out = softmax(QKᵀ/√d)·V</code>。整个公式一个 exel 表格就能算完——右侧交互台算的就是它，真实矩阵运算。</p>
+<p>两件事请在交互台里亲手验证：<b>①因果掩码</b>——把 j &gt; i 的打分置 −∞，softmax 后权重为 0，token 看不见未来（GPT 自回归性质的实现处）；<b>②√d 缩放</b>——去掉它，维度一高点积方差膨胀、softmax 饱和成 one-hot、梯度消失。论文里那个"没什么存在感"的 √d，是救命的。</p>
+<p class="soul">🤔 留给你想：Q/K/V 为什么要三份不同的向量，而不是用同一个向量"自己跟自己算相似度"？提示：如果 Q=K=V，权重会怎样？（永远最关注自己。）"找什么"和"我是什么"分开，关系才立得起来。</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>Vaswani et al.《Attention Is All You Need》</b>（<a href="https://arxiv.org/abs/1706.03762" target="_blank">arXiv:1706.03762</a>, 2017）。Transformer 原始论文；3.2 节是注意力的官方定义。引用量十万级的当代经典。</li>
+<li><b>Bahdanau et al.《Neural Machine Translation by Jointly Learning to Align and Translate》</b>（<a href="https://arxiv.org/abs/1409.0473" target="_blank">arXiv:1409.0473</a>, 2014）。注意力思想的出生证明——最初为了解决"把整句压成一个向量装不下"。</li>
+<li><b>李沐《Transformer 论文逐段精读》</b>（B 站 <a href="https://www.bilibili.com/video/BV1pu41176Yo" target="_blank">BV1pu41176Yo</a>）。中文世界公认的最佳讲解，先看它再啃原文，效率完全不同。</li>
+<li><b>Jay Alammar《The Illustrated Transformer》</b>（<a href="https://jalammar.github.io/illustrated-transformer/" target="_blank">jalammar.github.io</a>）。全球流传最广的图解版，配合作业食用。</li>
+<li><b>延伸 · "注意力学坏了"</b>：有研究显示注意力热力图并不总是可解释的（注意到的词 ≠ 依据的词），所以别把热力图当因果证据——它更像模型"工作时的监控录像"，不是"动机书"。</li>
+</ul></details>`,
+    quiz: [
+      { q: '注意力输出公式的正确顺序是？', kind: 'choice', options: [{ t: 'softmax(QKᵀ/√d)·V', correct: true, why: '' }, { t: 'softmax(QVᵀ/√d)·K', correct: false, why: '' }, { t: 'Q·softmax(KᵀV/√d)', correct: false, why: '' }], why: '先打分（Q 对 K 点积）、softmax 成权重、再混合 V——"打分→归一→加权取内容"。' },
+      { q: '因果掩码在数学上做了什么？为什么 GPT 必须要它？', kind: 'text', why: '把 i 位置对 j>i 的打分置 −∞，softmax 后权重为 0——训练时"预测下一个词"不许偷看答案，推理时才能一个字一个字往外生成（自回归）。' },
+      { q: '为什么打分要除以 √d？', kind: 'text', why: '点积的方差随维度 d 线性增大；不缩放则分数巨大、softmax 饱和成 one-hot、梯度近乎为零。√d 把方差拉回 1，保住可训练性。' },
+    ],
+    sim: { type: 'attention' },
+  },
+  {
+    id: 'c15', group: 'Transformer', title: '多头注意力', mech: 'H 个独立的 Q/K/V 投影',
+    read: `
+<p>一个注意力头只能"盯一种关系"。多头注意力（multi-head）的解法透着朴素的智慧：<b>与其造一个全知的大头，不如造 H 个各司其职的小头</b>——每个头有独立的 W_q/W_k/W_v 投影，把 C 维通道切成 H 份（每头 C/H 维），各自算注意力，最后拼回来再线性混合。</p>
+<p>在右侧交互台切换「头 A / 头 B」：同样的句子、同样的机制，两个头学到的权重模式完全不同——这正是设计意图（真实大模型里，有的头盯语法、有的头盯指代、有的头几乎均匀铺开当"保底"）。工程上还有个妙处：多头<b>不增加计算量</b>——每头维度是 C/H，总量与单头 C 维相同，只是把预算分散投资。</p>
+<p class="soul">🤔 留给你想：为什么"并联多个小头"优于"串联加深一个大头"？提示：注意力的本质是"建立 token 间关系"，并联 = 多种关系同时建立、互不干扰；串联 = 关系被层层改写。这与 c08"宽 vs 深"的权衡遥相呼应。</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>Vaswani et al. 2017</b>（<a href="https://arxiv.org/abs/1706.03762" target="_blank">arXiv:1706.03762</a>）§3.2.2 Multi-Head Attention。原文的表述极简："多头让模型在不同位置关注不同表示子空间的信息。"</li>
+<li><b>Sasha Rush 等《The Annotated Transformer》</b>（<a href="https://nlp.seas.harvard.edu/annotated-transformer/" target="_blank">Harvard NLP</a>）。哈佛 NLP 组把原论文逐行变成可运行的 PyTorch 代码——论文与代码的逐行对照读本，阶段 1 后期对照自己实现的神器。</li>
+<li><b>李沐《动手学深度学习》第 10 章</b>（<a href="https://zh.d2l.ai" target="_blank">zh.d2l.ai</a>）。注意力评分、自注意力、多头——中文教材线的对应章节。</li>
+<li><b>延伸 · 头并不总是"各司其职"</b>：后来的研究发现可以剪掉相当比例的头而几乎不掉点（如 Michel et al. 2019, arXiv:1905.10650）——"每头都有独特作用"更多是浪漫想象，工程真相是冗余也很足。</li>
+</ul></details>`,
+    quiz: [
+      { q: 'C=128、H=4 时，每个注意力头的维度是多少？拼接回后呢？', kind: 'number', answer: 32, why: '每头 C/H = 32 维；4 头拼接回 128 维，再过一次输出投影 W_o 混合各头信息。多头不加总计算量。' },
+      { q: '一句话说明"多头并联"在学什么？', kind: 'text', why: '不同投影子空间里的不同关系（语法/指代/位置……每个头一种偏好），彼此独立建立、最后线性融合。' },
+    ],
+    sim: { type: 'attention' },
+  },
+  {
+    id: 'c16', group: 'Transformer', title: 'Block：残差与 LayerNorm', mech: 'LN → 注意力/MLP → 残差',
+    read: `
+<p>光有注意力还叠不出深网络。Transformer 的基本积木是 <b>Block</b>，配方固定：<code>x = x + 注意力(LN(x))</code>，再来一遍 <code>x = x + MLP(LN(x))</code>——两个零件（注意力负责 token 间交流，MLP 负责 token 内加工），一个胶水（<b>残差</b>），一个稳定器（<b>LayerNorm</b>）。</p>
+<p><b>残差</b>（ResNet, 2015）是深度学习的救命稻草：相加让梯度有了"高速公路"，100 层不再是奢望——你能在 c07 的计算图上亲手验证：加法节点的梯度原样回传。<b>LayerNorm</b>（Ba et al., 2016）按"每个 token 的特征维"归一化（对比 BatchNorm 按批统计——变长序列、batch 内句子互不相干，NLP 天然选 LN）。还有个承前启后的细节：原始论文把 LN 放在子层之后（Post-LN），GPT-2 改成放在之前（Pre-LN）——<b>你 c17 要抄的 GPT 用的是 Pre-LN</b>，深网络下更稳。</p>
+<p>以及那个"4 倍扩展"的 MLP：先把通道扩到 4C 再压回来。为什么是 4？没有定理，是工程界的经验共识——大到够用，小到跑得动。</p>
+<p class="soul">🤔 留给你想：注意力负责"token 之间"，MLP 负责"token 之内"——如果把模型想成一支团队，这两者分别像团队协作里的什么？（开会交流 vs 各自干活；有研究估计参数与计算的大头都在 MLP——"讨论"贵而少，"干活"多而沉。）</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>He et al.《Deep Residual Learning》</b>（<a href="https://arxiv.org/abs/1512.03385" target="_blank">arXiv:1512.03385</a>, 2015）。残差的出生证明（ResNet，ImageNet 三冠）；"高速公路"直觉的原始表述。</li>
+<li><b>Ba, Kiros & Hinton《Layer Normalization》</b>（<a href="https://arxiv.org/abs/1607.06450" target="_blank">arXiv:1607.06450</a>, 2016）。LN 原论文，作者栏又是 Hinton。</li>
+<li><b>Radford et al.《GPT-2》</b>（OpenAI, 2019，《Language Models are Unsupervised Multitask Learners》）。Pre-LN 结构与 GPT 家族配方的一份权威实料——c17 你复现的正是它的微缩版。</li>
+<li><b>延伸 · "4"从哪来</b>：MLP 的 4× 扩展自原始论文沿用至今成为默认；近期研究（如 SwiGLU/MoE）在改这个数字——"魔法数字"被挑战的一天，就是架构演化的日常。</li>
+</ul></details>`,
+    quiz: [
+      { q: '残差连接为什么让深层网络变得可训练？', kind: 'text', why: 'x = x + f(x) 使梯度可以沿"+"原样回传（c07：加法梯度直通），每层只需学"修正量"而非完整变换——信息与梯度都有高速公路。' },
+      { q: 'NLP 里选 LayerNorm 而非 BatchNorm 的原因？', kind: 'text', why: '序列长度可变、batch 内句子互不相关，按批统计不稳定；LN 对每个 token 自己的特征维归一化，与批大小、长度解耦。' },
+      { q: 'GPT 系用的是 Pre-LN 还是 Post-LN？', kind: 'choice', options: [{ t: 'Pre-LN（LN 放在子层之前）', correct: true, why: '' }, { t: 'Post-LN（原始论文的做法）', correct: false, why: '' }], why: 'GPT-2 起改用 Pre-LN，深网络训练更稳；原始 Transformer 论文是 Post-LN——抄论文时要分清抄的是哪一版。' },
+    ],
+    sim: null,
+  },
+  {
+    id: 'c17', group: 'Transformer', title: '组装：字符级 GPT 全景', mech: '嵌入 → L×Block → LN → lm_head',
+    read: `
+<p>万事俱备：分词（c13）把文本变成 token id；注意力（c14/c15）让 token 交流；Block（c16）把它们叠深。组装表只有五行：</p>
+<ol>
+<li>token id 查<b>嵌入表</b> + 位置嵌入 → (B, T, C)；</li>
+<li>过 <b>L 层 Block</b>（形状始终 (B, T, C)——深度不改变形，这是残差和"通道恒定"设计的默契）；</li>
+<li>最后一层 <b>LayerNorm</b>；</li>
+<li><b>lm_head</b>（一个不带偏置的线性层）对词表打分 → (B, T, V)；</li>
+<li>与"下一个真实字符"算<b>交叉熵</b> → 标量。训练循环？还是 c09 那五件套，一字不差。</li>
+</ol>
+<p>右侧形状追踪器把整条流水线握在手里：拖 B/T/C/L/H，看每一站的形状与总参数量。注意观察：C 从 128 加到 384，参数量按<b>平方</b>涨——因为注意力和 MLP 都是 C² 级。这就是"模型大小"的真实手感，也是显存账本的入口。</p>
+<p class="soul">🤔 留给你想：位置嵌入为什么必须加？把顺序打乱重排 token，注意力网络会得到一模一样的结果（注意力天生"无视顺序"）——是"集合"不是"序列"。一句话：没有位置信息的 GPT 是个失忆的词袋。</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>Andrej Karpathy《Let's build GPT》</b>（<a href="https://www.youtube.com/watch?v=kCc8FmEb1nY" target="_blank">YouTube, 2023</a>）。S12/S13 跟敲的原片：从 bigram 到多头 GPT，全程莎翁语料。</li>
+<li><b>karpathy/nanoGPT</b>（<a href="https://github.com/karpathy/nanoGPT" target="_blank">GitHub</a>）。同款架构的工程版（约 300 行训练脚本），阶段 1 毕业后拿它重跑中文语料。</li>
+<li><b>Radford et al.《GPT-2》</b>（OpenAI, 2019）。你复现的架构 = GPT-2 的缩水版；论文里的超参表（12 层/12 头/117M）值得对着看一眼。</li>
+<li><b>延伸 · 同一张图放大三万倍</b>：形状追踪器里的模型 ~1M 参数，GPT-3 = 175B，今天的前沿模型更大——架构自 2018 年以来出奇地稳定，变的是 scale 与数据。Karpathy 说"Transformer 就是深度学习的 CNN 时刻"，此言不虚。</li>
+</ul></details>`,
+    quiz: [
+      { q: 'B=4、H=4、T=32、C=128 时，单个头的注意力权重矩阵形状是？', kind: 'choice', options: [{ t: '(4, 4, 32, 32)', correct: true, why: '' }, { t: '(4, 32, 128)', correct: false, why: '' }, { t: '(4, 128, 128)', correct: false, why: '' }], why: '(B, H, T, T)：每个 batch、每个头一张 T×T 权重图——右侧形状追踪器可验证。' },
+      { q: 'lm_head 输出的形状（B, T, V）中 V 是什么？交叉熵拿它和什么比？', kind: 'text', why: 'V=词表大小；每个位置给出"下一个字符是词表中每个字符"的打分（logits），与真实下一字符的 id 算交叉熵。' },
+      { q: '通道 C 从 128 加倍到 256，参数量大约变为几倍？', kind: 'number', answer: 4, tol: 0.5, why: '注意力和 MLP 的参数都 ∝ C²，翻倍 → 4 倍。嵌入虽是线性项，但大头在 Block。' },
+    ],
+    sim: { type: 'shapes' },
+  },
+  {
+    id: 'c18', group: 'Transformer', title: '生成：温度与 top-k', mech: 'logits ÷ T → softmax → 截断采样',
+    read: `
+<p>训练好的 GPT 怎么写文章？逐字符循环：<b>喂上文 → 得到词表上的打分（logits）→ 变成概率 → 采一个字 → 拼回上文 → 重复</b>。关键全在"变成概率"这一步的两个旋钮：</p>
+<p><b>温度 T</b>：logits ÷ T 再 softmax。T→0：分布尖锐化，永远选最高分（贪心，稳定但车轱辘话）；T=1：原始分布；T&gt;1：分布摊平，冷门字符上位（有创意，也可能胡言乱语）。公式与统计力学的 Boltzmann 分布同源——"温度"是物理学家借来的词。<b>top-k</b>：只保留分数前 k 个候选再归一化，把长尾的"怪字"一刀切掉。</p>
+<p>右侧模拟器的语言模型是真的：加载时用 400 字中文小语料现训一个字符 bigram 模型（数频次）。它写得不算好——但正因如此，<b>温度的效果才看得格外清楚</b>：T=0.2 时反复输出"春天花会开"式的安全牌；T=2.5 时开始出现"春蝶树雪"式的梦话。S13 你训练的字符 GPT 接管这个分布后，同样的旋钮立刻产出像样的句子。</p>
+<p class="soul">🤔 留给你想：T=0（贪心）与 T=2（放飞）之间，"写得最好"的温度因任务而异——写代码要低温，写诗要高温。这个"确定性↔多样性"的滑杆，是不是一切生成式系统的共同权衡？（想想推荐系统、游戏关卡生成。）</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>Andrej Karpathy《Let's build GPT》</b>（<a href="https://www.youtube.com/watch?v=kCc8FmEb1nY" target="_blank">YouTube, 2023</a>）结尾的采样演示——generate() 函数约 20 行，S13 你会亲手写它。</li>
+<li><b>Holtzman et al.《The Curious Case of Neural Text Degeneration》</b>（<a href="https://arxiv.org/abs/1904.09751" target="_blank">arXiv:1904.09751</a>, 2019）。论证贪心/beam 容易产出"车轱辘话"，提出 top-p（核采样）——阶段 2 你会在 HF 的生成参数里与它重逢。</li>
+<li><b>延伸 · 温度的物理学出身</b>：softmax(x/T) 与统计力学的 Boltzmann 分布同构，T 是"系统的混乱程度"——低温结晶、高温气化，语言模型的低温复读、高温胡言，完美同构。</li>
+<li><b>延伸 · 采样不是唯一答案</b>：推理解码还有 beam search、对比搜索、受约束解码等流派；对话模型主流仍是"温度 + top-p"的组合——简单、可控、够好。</li>
+</ul></details>`,
+    quiz: [
+      { q: 'temperature = 0.1 时的生成风格是？', kind: 'choice', options: [{ t: '接近贪心：稳定、保守、容易重复', correct: true, why: '' }, { t: '天马行空、大量生僻字', correct: false, why: '' }, { t: '和 T=1 完全一样', correct: false, why: '' }], why: '低温把 logits 差距放大，分布尖锐化——确定性换多样性。' },
+      { q: 'top-k = 1 等价于什么解码方式？', kind: 'text', why: '贪心解码（每步取最高分）。它仍可能有不确定性为零的"安全复读"问题。' },
+      { q: '一句话说明温度旋钮在权衡什么？', kind: 'text', why: '确定性与多样性：低温可复现、适合代码/事实；高温有创造性、适合头脑风暴——代价是出错率。' },
+    ],
+    sim: { type: 'sampler' },
+  },
 ];

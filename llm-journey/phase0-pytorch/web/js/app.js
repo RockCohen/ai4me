@@ -5,11 +5,15 @@ import { TensorSim } from './tensorsim.js';
 import { AutogradSim } from './autogradsim.js';
 import { Trainer } from './trainer.js';
 import { TensorLadder } from './ladder.js';
+import { AttentionSim } from './attention.js';
+import { SamplerSim } from './sampler.js';
+import { TokenizerSim } from './tokenizer.js';
+import { ShapeSim } from './shapes.js';
 
 (function () {
   'use strict';
 
-  const S_MAP = { c01: 'S1', c02: 'S1', c03: 'S2', c04: 'S2', c05: 'S2', c06: 'S3', c07: 'S3', c08: 'S4', c09: 'S7', c10: 'S6', c11: 'S7', c12: 'S8·S9' };
+  const S_MAP = { c01: 'S1', c02: 'S1', c03: 'S2', c04: 'S2', c05: 'S2', c06: 'S3', c07: 'S3', c08: 'S4', c09: 'S7', c10: 'S6', c11: 'S7', c12: 'S8·S9', c13: 'S10', c14: 'S10', c15: 'S10', c16: 'S11', c17: 'S12·S13', c18: 'S13' };
   const store = {
     get done() { return JSON.parse(localStorage.getItem('llm-journey-progress') || '{}'); },
     set(k, v) { const d = this.done; if (v) d[k] = 1; else delete d[k]; localStorage.setItem('llm-journey-progress', JSON.stringify(d)); },
@@ -67,8 +71,8 @@ import { TensorLadder } from './ladder.js';
   function renderHome(main) {
     main.innerHTML = `
       <div class="hero">
-        <h1>阶段 0 · 互动课程</h1>
-        <p class="sub">PyTorch 基础 × micrograd 复现 —— 预备课 + 12 章递进，每章只加一个机制</p>
+        <h1>llm-journey · 互动课程</h1>
+        <p class="sub">阶段 0（PyTorch 基础）+ 阶段 1（手写 Transformer）—— 预备课 + 18 章递进，每章只加一个机制</p>
         <p>形式借鉴 <a href="https://github.com/shareAI-lab/learn-claude-code" target="_blank">learn-claude-code</a>：
         左侧章节按顺序学；每章有<b>阅读视图</b>（讲透一个机制 + 内嵌预测题）和<b>模拟器视图</b>（在浏览器里玩这个机制）。
         全部离线运行，进度存在本机浏览器里。</p>
@@ -124,6 +128,10 @@ import { TensorLadder } from './ladder.js';
       if (ch.sim.type === 'tensor') TensorSim.mount(simHost);
       else if (ch.sim.type === 'autograd') AutogradSim.mount(simHost);
       else if (ch.sim.type === 'ladder') TensorLadder.mount(simHost);
+      else if (ch.sim.type === 'attention') AttentionSim.mount(simHost);
+      else if (ch.sim.type === 'sampler') SamplerSim.mount(simHost);
+      else if (ch.sim.type === 'tokenizer') TokenizerSim.mount(simHost);
+      else if (ch.sim.type === 'shapes') ShapeSim.mount(simHost);
       else if (ch.sim.type === 'trainer') Trainer.create().mount(simHost, ch.sim.cfg);
       pane.querySelectorAll('.tr-wrap, .ag-wrap, .ts-wrap').forEach(w => { w.style.maxWidth = '980px'; });
     }

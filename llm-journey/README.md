@@ -26,6 +26,11 @@ llm-journey/
     │   └── 04_mnist_solo/      # 脱稿完整脚本（S8 验收）
     ├── web/                 # 🌐 Web 互动课程平台（npm run dev）
     └── notes.md            # 阶段 0 学习笔记
+├── phase1-transformer/     # 阶段 1：从零手写 Transformer 📚 材料就绪
+    ├── AI助学手册.md        # 场次制学习流程（S10–S16）
+    ├── README.md           # 材料清单、任务清单、三周节奏
+    ├── exercises/          # bigram / 手算注意力 / 跟敲 / 禁写区重写 / 中文语料 / minbpe
+    └── notes.md            # 阶段 1 学习笔记
 ```
 
 ## 环境使用
@@ -48,7 +53,7 @@ jupyter notebook                 # 启动笔记本
 | 阶段 | 状态 | 产出物 |
 |---|---|---|
 | 0 · PyTorch 基础 | 🔄 进行中 | micrograd 复现 + MNIST 训练脚本 |
-| 1 · 手写 Transformer | ⬜ 未开始 | 字符级小 GPT |
+| 1 · 手写 Transformer | 📚 材料就绪 | 字符级小 GPT |
 | 2 · Hugging Face | ⬜ 未开始 | 推理与采样实验 |
 | 3 · LoRA 微调 | ⬜ 未开始 | 专属对话模型 |
 | 4 · 架构与推理 | ⬜ 未开始 | 本地部署 + 量化对比 |
