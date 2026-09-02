@@ -26,6 +26,7 @@ import { CmdGen } from './cmdgen.js';
 import { InferEst } from './inferest.js';
 import { TopicPick } from './topicpick.js';
 import { Delivery } from './delivery.js';
+import { Anim } from './anim.js';
 
 (function () {
   'use strict';
@@ -111,6 +112,7 @@ import { Delivery } from './delivery.js';
         </div>
         <div class="tabs">
           <button class="tab active" data-tab="read">📖 阅读</button>
+          ${ch.anim ? '<button class="tab" data-tab="anim">🎬 动画</button>' : ''}
           ${ch.sim ? '<button class="tab" data-tab="sim">🧪 模拟器</button>' : ''}
         </div>
       </div>
@@ -125,6 +127,7 @@ import { Delivery } from './delivery.js';
           </span>
         </div>
       </div>
+      ${ch.anim ? '<div id="tab-anim" class="tabpane" style="display:none"></div>' : ''}
       ${ch.sim ? '<div id="tab-sim" class="tabpane" style="display:none"></div>' : ''}`;
 
     Quiz.mount(document.getElementById('quiz'), ch.id, ch.quiz);
@@ -140,43 +143,55 @@ import { Delivery } from './delivery.js';
 
     if (ch.sim) {
       const pane = document.getElementById('tab-sim');
-      const simHost = document.createElement('div');
-      pane.appendChild(simHost);
-      if (ch.sim.type === 'tensor') TensorSim.mount(simHost);
-      else if (ch.sim.type === 'autograd') AutogradSim.mount(simHost);
-      else if (ch.sim.type === 'ladder') TensorLadder.mount(simHost);
-      else if (ch.sim.type === 'attention') AttentionSim.mount(simHost);
-      else if (ch.sim.type === 'sampler') SamplerSim.mount(simHost);
-      else if (ch.sim.type === 'tokenizer') TokenizerSim.mount(simHost);
-      else if (ch.sim.type === 'shapes') ShapeSim.mount(simHost);
-      else if (ch.sim.type === 'lora') LoRASim.mount(simHost);
-      else if (ch.sim.type === 'quant') QuantSim.mount(simHost);
-      else if (ch.sim.type === 'moe') MoESim.mount(simHost);
-      else if (ch.sim.type === 'kvcache') KVSim.mount(simHost);
-      else if (ch.sim.type === 'rag') RAGSim.mount(simHost);
-      else if (ch.sim.type === 'mnist') MNISTSim.mount(simHost);
-      else if (ch.sim.type === 'gradetool') GradeTool.mount(simHost);
-      else if (ch.sim.type === 'lncalc') LNCalc.mount(simHost);
-      else if (ch.sim.type === 'modelsim') ModelSim.mount(simHost);
-      else if (ch.sim.type === 'pipelinepeek') PipelinePeek.mount(simHost);
-      else if (ch.sim.type === 'maskview') MaskView.mount(simHost);
-      else if (ch.sim.type === 'chatcost') ChatCost.mount(simHost);
-      else if (ch.sim.type === 'dsbuilder') DSBuilder.mount(simHost);
-      else if (ch.sim.type === 'cmdgen') CmdGen.mount(simHost);
-      else if (ch.sim.type === 'inferest') InferEst.mount(simHost);
-      else if (ch.sim.type === 'topicpick') TopicPick.mount(simHost);
-      else if (ch.sim.type === 'delivery') Delivery.mount(simHost);
-      else if (ch.sim.type === 'trainer') Trainer.create().mount(simHost, ch.sim.cfg);
-      pane.querySelectorAll('.tr-wrap, .ag-wrap, .ts-wrap').forEach(w => { w.style.maxWidth = '980px'; });
+      if (pane) {
+        const simHost = document.createElement('div');
+        pane.appendChild(simHost);
+        if (ch.sim.type === 'tensor') TensorSim.mount(simHost);
+        else if (ch.sim.type === 'autograd') AutogradSim.mount(simHost);
+        else if (ch.sim.type === 'ladder') TensorLadder.mount(simHost);
+        else if (ch.sim.type === 'attention') AttentionSim.mount(simHost);
+        else if (ch.sim.type === 'sampler') SamplerSim.mount(simHost);
+        else if (ch.sim.type === 'tokenizer') TokenizerSim.mount(simHost);
+        else if (ch.sim.type === 'shapes') ShapeSim.mount(simHost);
+        else if (ch.sim.type === 'lora') LoRASim.mount(simHost);
+        else if (ch.sim.type === 'quant') QuantSim.mount(simHost);
+        else if (ch.sim.type === 'moe') MoESim.mount(simHost);
+        else if (ch.sim.type === 'kvcache') KVSim.mount(simHost);
+        else if (ch.sim.type === 'rag') RAGSim.mount(simHost);
+        else if (ch.sim.type === 'mnist') MNISTSim.mount(simHost);
+        else if (ch.sim.type === 'gradetool') GradeTool.mount(simHost);
+        else if (ch.sim.type === 'lncalc') LNCalc.mount(simHost);
+        else if (ch.sim.type === 'modelsim') ModelSim.mount(simHost);
+        else if (ch.sim.type === 'pipelinepeek') PipelinePeek.mount(simHost);
+        else if (ch.sim.type === 'maskview') MaskView.mount(simHost);
+        else if (ch.sim.type === 'chatcost') ChatCost.mount(simHost);
+        else if (ch.sim.type === 'dsbuilder') DSBuilder.mount(simHost);
+        else if (ch.sim.type === 'cmdgen') CmdGen.mount(simHost);
+        else if (ch.sim.type === 'inferest') InferEst.mount(simHost);
+        else if (ch.sim.type === 'topicpick') TopicPick.mount(simHost);
+        else if (ch.sim.type === 'delivery') Delivery.mount(simHost);
+        else if (ch.sim.type === 'trainer') Trainer.create().mount(simHost, ch.sim.cfg);
+        pane.querySelectorAll('.tr-wrap, .ag-wrap, .ts-wrap').forEach(w => { w.style.maxWidth = '980px'; });
+      }
+    }
+    if (ch.anim) {
+      const animPane = document.getElementById('tab-anim');
+      if (animPane) {
+        const animHost = document.createElement('div');
+        animPane.appendChild(animHost);
+        Anim.mount(animHost, ch.anim);
+        animHost.querySelector('.ts-wrap').style.maxWidth = '980px';
+      }
     }
 
     main.querySelectorAll('.tab').forEach(t => {
       t.onclick = () => {
         main.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
         t.classList.add('active');
-        document.getElementById('tab-read').style.display = t.dataset.tab === 'read' ? '' : 'none';
-        const sim = document.getElementById('tab-sim');
-        if (sim) sim.style.display = t.dataset.tab === 'sim' ? '' : 'none';
+        ['read', 'anim', 'sim'].forEach(name => {
+          const el = document.getElementById('tab-' + name);
+          if (el) el.style.display = t.dataset.tab === name ? '' : 'none';
+        });
       };
     });
   }

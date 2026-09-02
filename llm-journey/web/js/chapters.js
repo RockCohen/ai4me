@@ -40,7 +40,7 @@ export const CHAPTERS = [
 
   // ============ 组 A · 张量 ============
   {
-    id: 'c01', group: '阶段 0 · 张量', title: '形状与广播', mech: 'broadcasting 末维对齐',
+    id: 'c01', group: '阶段 0 · 张量', title: '形状与广播', mech: 'broadcasting 末维对齐', anim: 'matrix',
     read: `
 <p class="tip">🔗 前置：<b>c00 预备课</b>。"张量""形状 (3,4)"这两个说法还不踏实的话，先回上一章玩 10 分钟张量阶梯。</p>
 <p>先把语言钉死。<b>形状</b>是描述"数字怎么摆"的一串数字：<code>(3, 4)</code> 读作"3 行 4 列"。本章说的"维度"，指形状串里的<b>某一个数字</b>（比如那个 3 或 4），而不是"这是几维张量"里的维度——这个歧义坑过无数新人，先填了它。</p>
@@ -156,7 +156,7 @@ export const CHAPTERS = [
     sim: { type: 'autograd' },
   },
   {
-    id: 'c05', group: '阶段 0 · autograd', title: '手写线性回归', mech: '无框架训练循环',
+    id: 'c05', group: '阶段 0 · autograd', title: '手写线性回归', mech: '无框架训练循环', anim: 'gradient',
     read: `
 <p>"回归"这个词，是维多利亚时代一位绅士的失误。1886 年，弗朗西斯·高尔顿（达尔文的表弟）研究父母身高与子女身高的关系，发现子女身高会向平均值缩——他称之为 <i>regression towards mediocrity</i>（向平庸回归）。"回归分析法"从此得名，尽管今天的回归早已不管平庸不平庸。更早，1801 年高斯用最小二乘法从寥寥几笔观测中算出了失踪谷神星的轨道，震动天文界——"用一条直线去拟合散点"这件事，比神经网络早了整整两个世纪。</p>
 <p>把 c03/c04 拼起来，你就在做高斯当年做的事，只是求导交给了 autograd：</p>
@@ -212,7 +212,7 @@ export const CHAPTERS = [
     sim: { type: 'autograd' },
   },
   {
-    id: 'c07', group: '阶段 0 · micrograd', title: '拓扑排序与全图反向', mech: '逆拓扑序调用 _backward',
+    id: 'c07', group: '阶段 0 · micrograd', title: '拓扑排序与全图反向', mech: '逆拓扑序调用 _backward', anim: 'chain',
     read: `
 <p>有了单节点的 <code>_backward</code>，全图反向只剩一个看起来人畜无害的问题：<b>按什么顺序调用？</b>答案藏在一个 1962 年就解决的问题里——拓扑排序（ Knuth《计算机程序设计艺术》第一卷里有经典论述，它原本的用场是装配线和菜谱：先切菜，再下锅）。</p>
 <p>规则一句话：<b>一个节点的 _backward，必须在它所有的下游消费者都处理完之后才执行</b>——否则它读到的 out.grad 还不完整。深度优先后序遍历，再倒过来调用，约 8 行：</p>
@@ -243,7 +243,7 @@ export const CHAPTERS = [
     sim: { type: 'autograd' },
   },
   {
-    id: 'c08', group: '阶段 0 · micrograd', title: '从 Value 到 MLP', mech: 'Neuron / Layer / MLP 组装',
+    id: 'c08', group: '阶段 0 · micrograd', title: '从 Value 到 MLP', mech: 'Neuron / Layer / MLP 组装', anim: 'netflow',
     read: `
 <p>神经网络的历史，是一部"捧杀与平反"的连续剧。1958 年，《纽约时报》报道 Rosenblatt 的感知机，用的是这样的句子：电子计算机的胚胎，将来会走路、说话、看见、书写、自我复制。1969 年，Minsky 与 Papert 用一本《Perceptrons》泼来冷水：一层感知机连 XOR（异或）都分不开。经费应声蒸发，史称第一次 AI 寒冬。</p>
 <p>平反来得也不快：1989 年 Cybenko、1991 年 Hornik 先后证明<b>万能近似定理</b>——一层足够宽的隐层，能近似任意连续函数。理论赢了，实践还是冷了半截："能近似"不等于"学得动"：要拟合同样的曲线，浅而宽的网络所需宽度往往指数爆炸，而<b>深</b>网络用少量参数层层折叠就做到了。深度学习的"深"，是效率的胜利，不是宽度的胜利。</p>

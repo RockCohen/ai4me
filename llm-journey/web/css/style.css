@@ -385,6 +385,18 @@ main { flex: 1; padding: 30px 40px 60px; max-width: 1140px; min-width: 0; }
 .ie-out { font-size: 13.5px; }
 .ie-out b { color: var(--accent); font-family: ui-monospace,monospace; }
 
+/* ---------- 动画剧场（3B1B 风格） ---------- */
+.an-wrap { max-width: 980px; }
+.an-canvas { display: block; width: 100%; height: auto; }
+.an-caption {
+  margin-top: 12px; padding: 13px 20px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--glass-border); border-radius: 14px;
+  font-size: 16px; line-height: 1.75; color: #fff; min-height: 56px;
+}
+.an-dot { font-size: 12px; padding: 4px 11px; }
+.an-dot.active-in { background: var(--accent); color: #05281e; border: none; font-weight: 650; }
+
 @media (max-width: 900px) {
   .layout { flex-direction: column; padding: 12px; }
   .sidebar { width: 100%; height: auto; position: static; }
