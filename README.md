@@ -1,6 +1,8 @@
-# ai4me · 大模型学习工作区
+# llm-journey · 大模型学习旅程
 
-个人大模型入门学习的工作区总仓：路径规划、实验代码、学习笔记与互动课程统一用 git 管理。
+> GitHub 仓库：<https://github.com/RockCohen/llm-journey>
+
+个人大模型入门学习的工作区总仓：路径规划、互动课程、实验代码、学习笔记与思考延伸统一用 git 管理。
 
 ## 结构
 
@@ -19,4 +21,4 @@ ai4me/
 
 - 学习从 [llm-journey/phase0-pytorch/AI助学手册.md](llm-journey/phase0-pytorch/AI助学手册.md) 开始；
 - 每完成一个实验就 commit，配三五行情式笔记；
-- 推送远端（首次）：`gh auth login` 后 `gh repo create ai4me --private --source=. --push`。
+- 同步远端：`git push`（远端 `origin` 已指向 `RockCohen/llm-journey`）。
