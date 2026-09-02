@@ -319,6 +319,36 @@ main { flex: 1; padding: 30px 40px 60px; max-width: 1140px; min-width: 0; }
 .ld-row { font-size: 13.5px; margin: 7px 0; }
 .ld-row.dim { color: var(--dim); }
 
+/* ---------- 阶段 1–5 新增组件 ---------- */
+.tk-text { width: 100%; background: rgba(8,12,24,0.5); border: 1px solid var(--glass-border); color: var(--text); border-radius: 12px; padding: 9px 12px; font: inherit; resize: vertical; }
+.tk-panel { padding: 14px; }
+.tk-token { display: inline-block; margin: 3px; padding: 4px 9px; border-radius: 9px; background: rgba(96,165,250,0.14); border: 1px solid rgba(96,165,250,0.3); font-size: 13px; }
+.tk-token i { display: block; font-style: normal; font-size: 10px; color: var(--dim); font-family: ui-monospace,monospace; }
+.tk-stats { font-size: 13.5px; }
+.active-head { background: rgba(94,234,212,0.16) !important; border-color: var(--accent) !important; color: var(--accent) !important; }
+.shp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.shp-table th, .shp-table td { border-bottom: 1px solid rgba(255,255,255,0.08); padding: 7px 12px; text-align: left; }
+.shp-table th { color: var(--dim); font-weight: 500; }
+.shp-panel { padding: 6px 14px 12px; }
+.shp-total { padding: 10px 4px 4px; color: var(--accent); font-size: 13.5px; }
+.shp-total b { color: #fff; }
+.moe-in { font-size: 12.5px; padding: 5px 11px; }
+.active-in { background: rgba(94,234,212,0.16) !important; border-color: var(--accent) !important; color: var(--accent) !important; }
+.moe-stats { font-size: 13.5px; }
+.moe-stats b { color: var(--accent); }
+.kv-table { font-size: 13.5px; }
+.kv-table b { color: var(--accent); font-family: ui-monospace,monospace; }
+.rag-q { width: 100%; background: rgba(8,12,24,0.5); border: 1px solid var(--glass-border); color: var(--text); border-radius: 12px; padding: 9px 12px; font: inherit; }
+.rag-doc { margin: 10px 14px; border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 14px; background: rgba(255,255,255,0.03); }
+.rag-doc.picked { border-color: rgba(94,234,212,0.5); background: rgba(94,234,212,0.06); }
+.rag-doc-head { display: flex; justify-content: space-between; font-size: 12px; color: var(--dim); margin-bottom: 5px; }
+.rag-hit { color: var(--accent); }
+.rag-doc-body { font-size: 13.5px; color: var(--text); }
+.rag-prompt { margin-top: 8px; }
+.rag-prompt pre { margin: 6px 0 0; white-space: pre-wrap; }
+.lr-params { font-size: 13.5px; }
+.lr-params b { color: var(--accent); }
+
 @media (max-width: 900px) {
   .layout { flex-direction: column; padding: 12px; }
   .sidebar { width: 100%; height: auto; position: static; }

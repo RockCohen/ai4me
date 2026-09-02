@@ -1,7 +1,7 @@
 # llm-journey · Web 互动课程平台（阶段 0/1 共享）
 
 形式借鉴 [learn-claude-code](https://github.com/shareAI-lab/learn-claude-code)：
-**预备课 + 阶段 0/1 共 18 章递进、每章只加一个机制、Web 多视图**（阅读 + 模拟器）。
+**预备课 + 阶段 0–5 共 33 章递进、每章只加一个机制、Web 多视图**（阅读 + 模拟器）。
 区别：learn-claude-code 的 web 需要 `npm install`，本平台同样是 npm 项目（vite）——`npm install && npm run dev` 即可。
 
 ## 打开方式
@@ -57,6 +57,25 @@ web/
 | c16 Block：残差与 LayerNorm | 残差 + LN | （阅读 + 预测题） | S11 |
 | c17 组装：字符级 GPT 全景 | 嵌入→L×Block→lm_head | ShapeSim 形状追踪 | S12·S13 |
 | c18 生成：温度与 top-k | 采样解码 | SamplerSim（现训 bigram） | S13 |
+| **阶段 2 · Hugging Face** ||||
+| c19 预训练模型的解剖 | config/weights/tokenizer | （阅读） | S17 |
+| c20 pipeline 与精细控制 | 三行 vs 手动档 | （阅读） | S17 |
+| c21 解码策略全家桶 | temperature/top-k/top-p | SamplerSim（+top-p） | S18 |
+| c22 GPT 与 BERT | CLM vs MLM | （阅读） | S19 |
+| c23 上下文窗口与成本 | 一切皆 token | （阅读） | S20 |
+| **阶段 3 · 微调** ||||
+| c24 LoRA 低秩分解 | 冻结 W + B·A | LoRASim 参数悬崖 | S22 |
+| c25 QLoRA 显存账本 | 4bit 基座 + LoRA | QuantSim 计算器 | S23 |
+| c26 指令数据集 | 质量>数量 | （阅读） | S24 |
+| c27 双轨工具链 | MLX + Colab | （阅读） | S25 |
+| **阶段 4 · 推理** ||||
+| c28 MoE 专家分诊 | 路由 + top-k 激活 | MoESim 路由可视化 | S26 |
+| c29 KV Cache | O(T²)→O(T) | KVSim 计算器 | S27 |
+| c30 部署与量化对比 | Ollama/vLLM | （回 Python） | S28 |
+| **阶段 5 · 项目** ||||
+| c31 选题与范围控制 | 四环缺一不可 | （阅读） | S29 |
+| c32 RAG 检索骨架 | 检索→拼prompt→生成 | RAGSim 迷你知识库 | S30 |
+| c33 交付与作品集 | FastAPI/README/演示 | （回 Python） | S31 |
 
 ## 边界说明（诚实条款）
 

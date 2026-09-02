@@ -472,4 +472,282 @@ export const CHAPTERS = [
     ],
     sim: { type: 'sampler' },
   },
+
+  // ============ 组 F · 阶段 2：Hugging Face ============
+  {
+    id: 'c19', group: '阶段 2 · Hugging Face', title: '预训练模型的解剖', mech: 'config / weights / tokenizer',
+    read: `
+<p>阶段 0/1 你造的是"引擎"；阶段 2 开始，你第一次开上"别人的整车"。第一个能力：<b>看懂一个预训练模型的解剖图</b>。从 Hub 下载的每个模型目录里都有三样东西：</p>
+<ul>
+<li><code>config.json</code>——模型的"身份证"：多少层、多少头、词表多大（c17 形状追踪器里的那些参数）；</li>
+<li>权重文件——<code>model.safetensors</code>（或分片的 .safetensors）：真正的参数本体；</li>
+<li><b>tokenizer 文件</b>——词表与切分规则，和模型严格配对，换错词表 = 模型失语。</li>
+</ul>
+<p><code>from_pretrained()</code> 做的就是"读身份证 → 下载权重 → 装配 tokenizer"三步。顺便记一个安全冷知识：老格式的 pickle 权重文件加载即执行代码（恶意模型攻击面），而 safetensors 是纯数据格式——这就是新模型一律改用它的原因。</p>
+<p class="soul">🤔 留给你想：为什么"权重和 tokenizer 必须成对"？如果拿 BERT 的 tokenizer 喂 GPT 会发生什么？（提示：同一个 id 在两张词表里是两个完全不同的 token。）</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>Hugging Face 官方课程 LLM Course</b>（<a href="https://huggingface.co/learn" target="_blank">huggingface.co/learn</a>，有中文版）。阶段 2 实操主线，前三章覆盖本阶段全部考点。</li>
+<li><b>Hugging Face · safetensors</b>（<a href="https://github.com/huggingface/safetensors" target="_blank">GitHub</a>）。为什么快且安全：零拷贝 + 不执行代码。</li>
+<li><b>Qwen2.5 技术报告</b>（arXiv:2412.15115）。看看一个开源模型家族的 config 长什么样——0.5B 到 72B 是同一张蓝图缩放。</li>
+</ul></details>`,
+    quiz: [
+      { q: 'config.json 里存的是什么？权重存在哪？', kind: 'text', why: 'config = 架构超参（层数/头数/词表大小）；权重在 model.safetensors（或分片文件）。from_pretrained 两样都要读。' },
+      { q: '为什么新模型都用 safetensors 而不是老的 pickle 格式？', kind: 'text', why: 'pickle 加载即执行任意代码（恶意模型可以借此攻击你）；safetensors 是纯数据格式，只能被读，不能被执行。' },
+    ],
+    sim: null,
+  },
+  {
+    id: 'c20', group: '阶段 2 · Hugging Face', title: 'pipeline 与精细控制', mech: '三行推理 vs AutoModel 组装',
+    read: `
+<p>HF 给了你两档油门。<b>傻瓜档 pipeline</b>：三行代码完成"加载模型 + 预处理 + 推理 + 后处理"，适合快速验证想法；<b>手动档 AutoModel/AutoTokenizer</b>：自己分词 → 自己喂模型 → 自己解码，每一步都摊开——这才是理解推理过程的方式。S18 的三个 demo（文本生成/情感分类/翻译）会两种都写一遍，对比着学。</p>
+<p>两个工程细节提前记下：<b>① device 参数</b>——Mac 上传 <code>device='mps'</code> 才用上 GPU，不传就是 CPU 干跑；<b>② 国内镜像</b>——ModelScope（魔搭）镜像了主流模型，下载卡住时的官方备胎。</p>
+<p class="soul">🤔 留给你想：pipeline 帮你藏了什么？藏起来的部分，什么时候会变成坑？（提示：回想 c10——静默行为的代价；再想想：预处理和后处理不一致时，模型看到的和你以为它看到的，可能不是同一句话。）</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>HF LLM Course 第 1–3 章</b>（<a href="https://huggingface.co/learn" target="_blank">huggingface.co/learn</a>）。pipeline、AutoModel、tokenizer 三件的官方正解。</li>
+<li><b>ModelScope 魔搭社区</b>（<a href="https://modelscope.cn" target="_blank">modelscope.cn</a>）。国内模型镜像与下载提速首选。</li>
+<li><b>延伸 · pipeline 的本质</b>：它只是一段"把 tokenizer→model→postprocess 串起来的胶水代码"，读一遍它的源码（几十行）胜过十篇教程。</li>
+</ul></details>`,
+    quiz: [
+      { q: 'pipeline 第一个参数是什么？第二个通常是什么？', kind: 'text', why: '任务名（如 "text-generation"）+ 模型名（Hub id 或本地路径）。可选 device 指定推理设备。' },
+      { q: 'AutoTokenizer 和 AutoModel 为什么要"成对"从同一个模型名加载？', kind: 'text', why: 'tokenizer 的词表与模型的嵌入矩阵严格对应（c19），错配 = id 含义全错，模型输出乱码。' },
+    ],
+    sim: null,
+  },
+  {
+    id: 'c21', group: '阶段 2 · Hugging Face', title: '解码策略全家桶', mech: 'temperature / top-k / top-p',
+    read: `
+<p>c18 玩过温度与 top-k，现在补上最后一块拼图：<b>top-p（核采样，nucleus sampling）</b>——不是"保留前 k 个"，而是"从最高分往下累加，加到概率和达到 p 为止"。它的聪明之处在于<b>自适应</b>：模型自信时（分布尖）候选自然少，模型犹豫时（分布平）候选自然多——k 是死数字，p 是活门槛。</p>
+<p>右侧还是那个采样模拟器（新增 top-p 滑杆）。做三组对照实验并写一句结论：①固定 T=1，扫 top-k=1/10/50；②固定 top-k=50，扫 T=0.3/1.0/2.0；③ top-p=0.9 在 T=0.5 和 T=1.5 下分别保留几个候选？</p>
+<p>工程默认值的味道：对话模型主流是 <b>T≈0.7 + top-p≈0.9</b>——低温度保可靠，核采样保多样，两个旋钮各管一头。S19 会把这套扫描搬到真实模型（Qwen2.5-0.5B）上做。</p>
+<p class="soul">🤔 留给你想：为什么"自适应门槛"（top-p）通常优于"固定门槛"（top-k）？把这个问题推广到生活：固定配额 vs 按需分配，各适合什么场景？</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>Holtzman et al.《The Curious Case of Neural Text Degeneration》</b>（<a href="https://arxiv.org/abs/1904.09751" target="_blank">arXiv:1904.09751</a>, 2019）。top-p 的原始论文；开头的人造文本对比图是名场面。</li>
+<li><b>HF 文档 · Text generation strategies</b>（huggingface.co/docs）。官方把全部解码策略串讲的页面，S19 的查表工具。</li>
+<li><b>延伸 · 旋钮的战场</b>：temperature/top-p 后来成了"人机协作的界面"——写代码低温、写文案高温，已成为 prompt 工程的常识配比。</li>
+</ul></details>`,
+    quiz: [
+      { q: 'top-p 和 top-k 的本质区别一句话？', kind: 'text', why: 'top-k 是固定候选数；top-p 是固定累计概率质量、候选数自适应——分布尖时候选少，分布平时候选多。' },
+      { q: '写代码补全任务，T 和 top-p 应该往哪边调？为什么？', kind: 'text', why: '低温（0.2~0.4）+ 保守 top-p：代码对确定性要求高，一个"有创意"的错字就是一行 bug。' },
+    ],
+    sim: { type: 'sampler' },
+  },
+  {
+    id: 'c22', group: '阶段 2 · Hugging Face', title: 'GPT 与 BERT：两条路线', mech: 'CLM 单向生成 vs MLM 双向理解',
+    read: `
+<p>2018 年，两篇论文分岔出了两条路线：<b>GPT-1</b>（OpenAI，6 月）用"预测下一个词"从左到右训练；<b>BERT</b>（Google，10 月）用"完形填空"（随机遮住 15% 的词让模型猜，MLM）双向训练。同一个 Transformer 底座，<b>看世界的方式相反</b>：GPT 只能看左边（因果掩码，c14），BERT 左右全看。</p>
+<p>分岔的结果众所周知：GPT 一路走到 ChatGPT；BERT 成了搜索与分类的骨干。但"谁赢了"是错的问题——<b>它们赢在不同赛道</b>：要"生成"就必须单向（推理时未来根本不存在），要"理解"就该双向（读上下文当然全都要看）。李沐的两期精读（GPT 系列一篇、BERT 一篇）是这条分岔岭的最佳中文地图。</p>
+<p class="soul">🤔 留给你想：BERT 的 MLM 训练"看得到两边"，按理说理解更深，为什么最终统治生成时代的反而是"偷看不了未来"的 GPT？（提示：MLM 学的是"填空"，自回归学的是"续写"——哪个的产物能直接当产品用？）</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>Devlin et al.《BERT》</b>（<a href="https://arxiv.org/abs/1810.04805" target="_blank">arXiv:1810.04805</a>, 2018）。MLM 预训练原文。</li>
+<li><b>Radford et al.《GPT-2》</b>（OpenAI, 2019）。自回归路线的宣言式论文。</li>
+<li><b>李沐论文精读</b>：GPT 系列（<a href="https://www.bilibili.com/video/BV1AF41137uu" target="_blank">BV1AF41137uu</a>）与 BERT 两期——S19 的主材料。</li>
+<li><b>延伸 · 殊途同归</b>：今天的前沿模型也在用 BERT 式思想"补课"——比如对齐阶段的双向偏好学习。路线之争的终局往往是融合。</li>
+</ul></details>`,
+    quiz: [
+      { q: 'BERT 为什么天然不适合"生成"？', kind: 'text', why: 'MLM 双向训练：每个位置都看得到全文（包括"未来"）。自回归生成要求严格单向——BERT 的注意力里没有因果掩码。' },
+      { q: '[MASK] 在 BERT 里扮演什么角色？', kind: 'text', why: '训练时随机遮 15% 的词强制模型用上下文双向推断——"完形填空"是它的训练信号，也是它理解力的来源。' },
+    ],
+    sim: null,
+  },
+  {
+    id: 'c23', group: '阶段 2 · Hugging Face', title: '上下文窗口与成本', mech: 'context length 与 token 计费',
+    read: `
+<p>用 API 时有两个数字决定钱包与体验：<b>上下文窗口</b>（模型一次能"看见"的最大 token 数——c29 会讲它背后是 KV cache 的物理极限）和<b>单价</b>（每百万 token 收费）。由此推出三条工程常识：</p>
+<ol>
+<li>输入和输出<b>都</b>计费，而历史对话每轮都重发一遍——长对话的费用不是线性增长，是平方陷阱；</li>
+<li>超窗 = 要么截断要么报错，"塞得下"不等于"答得好"（中间内容容易被忽略，业界叫 lost in the middle）；</li>
+<li>省钱的顺序永远是：先换小模型试 → 再压缩历史 → 最后才上长窗口大模型。</li>
+</ol>
+<p>这些数字不需要背，需要的是建立"一切皆 token"的换算直觉：1 个中文字 ≈ 1~2 token，1 页英文 ≈ 500~600 token。S20 让你用 tokenizer 给自己最常用的一段话标个价。</p>
+<p class="soul">🤔 留给你想：c29 会告诉你，上下文窗口的本质是 KV cache 的显存上限——"模型能记多长"是个硬件问题，不是智力问题。这如何改变你对"大模型 vs 小模型"的想象？</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>Liu et al.《Lost in the Middle》</b>（arXiv:2307.03172, 2023）。长上下文里模型"顾两头忘中间"的实证——塞得满 ≠ 用得上。</li>
+<li><b>延伸 · 滑动窗口与 RAG</b>：超越窗口的两大流派——截断滑窗（丢历史）与检索注入（只带相关片段，见 c32）。</li>
+<li><b>延伸 · 一切皆 token</b>：API 计费、上下文窗口、推理速度、显存占用——四个看似无关的数字，全是同一个单位的不同投影。</li>
+</ul></details>`,
+    quiz: [
+      { q: '十轮对话后 API 成本为什么远超十倍单轮？', kind: 'text', why: '每轮都把全部历史重发一遍：第 n 轮的输入 ≈ 前 n-1 轮的总量 → 总成本随轮数近似平方增长。' },
+      { q: '上下文窗口限制的物理本质是什么？（阶段 4 会展开）', kind: 'text', why: 'KV cache 显存：每个 token 的 K/V 都要在显存里住着供注意力查询——窗口 = 显存能养得起多少 token。' },
+    ],
+    sim: null,
+  },
+
+  // ============ 组 G · 阶段 3：微调 ============
+  {
+    id: 'c24', group: '阶段 3 · 微调', title: 'LoRA：低秩分解', mech: '冻结 W，只训 B·A',
+    read: `
+<p>全参微调 7B 模型 = 训练 70 亿个参数 = 一台服务器。LoRA（Hu et al., 2021）的洞察轻巧得漂亮：<b>微调要学的东西，其实装在一个很小的"低秩"修正里</b>。于是冻结全部原权重 W，只训练两个瘦矩阵 B·A 去表示修正量 ΔW：</p>
+<p style="text-align:center"><code>W' = W + B·A，其中 A 是 C×r、B 是 r×C，r 通常 8~64</code></p>
+<p>参数量从 C² 掉到 2Cr——r=16、C=4096 时只有约 0.8%。推理时 B·A 可以合并回 W，<b>零额外延迟</b>。为什么只加在注意力的投影矩阵上？原论文的实验结论：那里收益最高。右侧探索器把这笔账摊开：拖 r 和 C，亲眼看参数量的悬崖。</p>
+<p class="soul">🤔 留给你想：r（秩）控制什么？r=1 极省但学不动，r=64 表达力强但接近全参——这个滑杆的本质是"任务需要多少新知识"。给你"文言文翻译助手"和"全新编程语言"，你会分别选多大 r？</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>Hu et al.《LoRA》</b>（<a href="https://arxiv.org/abs/2106.09685" target="_blank">arXiv:2106.09685</a>, 2021）。十余页的原论文，S22 精读对象；重点看"为什么低秩够用"的动机实验。</li>
+<li><b>MLX（Apple 官方）</b>（<a href="https://github.com/ml-explore/mlx" target="_blank">github.com/ml-explore/mlx</a>）。本机微调工具（<code>mlx_lm.lora</code>），16GB Mac 的正解。</li>
+<li><b>LLaMA-Factory</b>（<a href="https://github.com/hiyouga/LLaMA-Factory" target="_blank">GitHub</a>）。图形化微调全家桶：先用它跑通全局，再回代码裸写（路径文档 6.2 的顺序）。</li>
+<li><b>延伸 · rank 与 alpha</b>：实际代码里还有个 alpha（缩放系数），有效修正 ≈ alpha/r × B·A——alpha/r 是"学习强度"旋钮，r 才是"容量"旋钮，别拧混。</li>
+</ul></details>`,
+    quiz: [
+      { q: 'LoRA 把可训练参数从 C² 降到多少？', kind: 'text', why: '降到 2Cr；r=16、C=4096 时约为原全参的 0.78%。这就是"16GB 显卡微调 7B"的数学门票。' },
+      { q: '推理时 LoRA 会拖慢速度吗？', kind: 'text', why: '不会：B·A 可合并回 W，结构与原模型完全一致，零额外延迟——这是它战胜 adapter 等前代方案的关键。' },
+    ],
+    sim: { type: 'lora' },
+  },
+  {
+    id: 'c25', group: '阶段 3 · 微调', title: 'QLoRA：量化的显存账本', mech: '4-bit 冻结基座 + LoRA',
+    read: `
+<p>LoRA 解决了"训多少参数"，QLoRA（Dettmers et al., 2023）解决剩下的问题："参数住在多大的房子里"。配方一句话：<b>把冻结的基座量化到 4-bit 存储，LoRA 适配器保持 16-bit 精度训练</b>。基座只是知识仓库（不需要梯度），压到 1/4 体积无伤大雅；适配器是学习发生的地方，必须保精度。两者相加，7B 微调从 ~56GB 的门槛降到 ~6GB——单张消费级显卡/16GB Mac 从此入场。</p>
+<p>右侧账本计算器把账摊开：同一份参数在 FP16/INT8/4-bit 下各占多少 GB、离 16GB 上限还有多远。注意数字的幽默感：<b>量化 4 倍省的是"存"，训练时该算的还是得算</b>（4-bit 存、16-bit 算，用时反量化）——所以 QLoRA 省显存但不会更快。</p>
+<p class="soul">🤔 留给你想：为什么基座敢量化到 4-bit，LoRA 适配器却不敢？（提示：基座是"已学成的知识"，容差大；适配器是"正在学的增量"，梯度对精度敏感。）"哪里能省、哪里不能省"，是所有优化问题的第一问。</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>Dettmers et al.《QLoRA》</b>（<a href="https://arxiv.org/abs/2305.14314" target="_blank">arXiv:2305.14314</a>, 2023）。4-bit NormalFloat(NF4)、双重量化、分页优化器三件套的原文。</li>
+<li><b>bitsandbytes</b>（<a href="https://github.com/TimDettmers/bitsandbytes" target="_blank">GitHub</a>）。QLoRA 的实现库——注意只支持 NVIDIA CUDA，Mac 上对应物是 MLX 的量化接口。</li>
+<li><b>延伸 · 存与算的分离</b>：4-bit 存储 + 反量化后 16-bit 计算（compute dtype）是 QLoRA 的隐藏细节——省显存不等于省算力，这个区分在成本估算时值钱。</li>
+</ul></details>`,
+    quiz: [
+      { q: 'QLoRA = 哪两样东西的组合？', kind: 'text', why: '4-bit 量化的冻结基座 + 16-bit 的 LoRA 适配器训练。基座管知识存储，适配器管学习增量。' },
+      { q: '7B 模型 FP16 全参微调与 QLoRA 微调的显存门槛分别大约是多少？', kind: 'choice', options: [{ t: '≈56GB 与 ≈6GB', correct: true, why: '' }, { t: '≈14GB 与 ≈2GB', correct: false, why: '' }, { t: '两者差不多', correct: false, why: '' }], why: 'FP16 权重本体就 14GB，训练再乘梯度/优化器状态；QLoRA 基座压到 ~3.5GB 加小 adapter 与激活。' },
+    ],
+    sim: { type: 'quant' },
+  },
+  {
+    id: 'c26', group: '阶段 3 · 微调', title: '指令数据集', mech: 'instruction / input / output',
+    read: `
+<p>微调的本质是"用示例告诉模型它的岗位说明书"，所以数据集格式就是三栏：<b>instruction</b>（要做什么）、<b>input</b>（可选的输入）、<b>output</b>（期望回答）。Alpaca 用 5.2 万条这样的数据教会了 LLaMA 听指令——但 2023 年之后的共识更激进：<b>几百条高质量数据往往胜过几万条平庸数据</b>（LIMA 论文甚至只用 1000 条）。</p>
+<p>为什么质量碾压数量？微调不灌知识（知识在预训练里），它只校准<b>行为模式</b>——而模型模仿行为时，一个坏示例的毒性胜过一百个好示例。这就是为什么路径文档鼓励你自建 200 条：亲手写"文言文翻译助手"的问答对，每一对都是你对"岗位"的定义。</p>
+<p class="soul">🤔 留给你想：给"文言文翻译助手"造 10 条数据，你会怎么保证风格一致？（提示：先给自己写一份 3 条的"金标准"，剩下 7 条照着它批改——和带新人一个道理。）</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>Taori et al.《Stanford Alpaca》</b>（<a href="https://crfm.stanford.edu/2023/03/13/alpaca.html" target="_blank">crfm.stanford.edu</a>, 2023）。52K 指令数据 + 训练配方全开源，指令微调的全民起点。</li>
+<li><b>Zhou et al.《LIMA: Less Is More for Alignment》</b>（<a href="https://arxiv.org/abs/2305.11206" target="_blank">arXiv:2305.11206</a>, 2023）。1000 条精选数据对齐 65B 模型——"质量>数量"的实证巅峰。</li>
+<li><b>BelleGroup 中文指令数据</b>（GitHub 搜索 BelleGroup）。中文指令数据的开源集合，S24 数据底料。</li>
+</ul></details>`,
+    quiz: [
+      { q: '指令数据集的三栏格式是？哪一栏可选？', kind: 'text', why: 'instruction（任务）+ input（可选输入）+ output（期望输出）。无输入任务（如"翻译这句话"）input 留空。' },
+      { q: '为什么"几百条高质量"能胜过"几万条平庸"？', kind: 'text', why: '微调校准的是行为模式而非知识；坏示例的毒性会放大，模型模仿的是你给的样子，不是你想要的样子。' },
+    ],
+    sim: null,
+  },
+  {
+    id: 'c27', group: '阶段 3 · 微调', title: '双轨工具链', mech: 'MLX 本机 + Colab 云端',
+    read: `
+<p>路径文档为本阶段设计了"双轨制"，各取所长：<b>本机 MLX 路线</b>负责理解原理（1.5B~4B 模型、<code>mlx_lm.lora</code> 一条命令起训、数据就在本地）；<b>Colab 云端路线</b>负责见识工业界标准（T4 显卡 + bitsandbytes 的 QLoRA、7B 模型、PEFT/TRL 官方栈）。两条轨道各安排一天，互为注释。</p>
+<p>顺序建议维持路径文档的定论：<b>先用 LLaMA-Factory 图形界面跑通一次全流程</b>（获得全局感：数据→训练→导出→对话验证），<b>再用裸代码复现一遍</b>——工具让你跑通，裸写让你学会。这与阶段 0 的哲学同源：pipeline 快，但理解在 AutoModel 里。</p>
+<p class="soul">🤔 留给你想：为什么"图形界面跑通 + 代码复现"优于"直接读文档手写"？——回想你学训练循环时的经验：先有能跑的整体，才挂得住局部的理解。</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>MLX 文档 · LLM 微调</b>（<a href="https://github.com/ml-explore/mlx-examples" target="_blank">github.com/ml-explore/mlx-examples</a>）。<code>mlx_lm.lora</code> 的官方示例与数据格式。</li>
+<li><b>Google Colab</b>（<a href="https://colab.research.google.com" target="_blank">colab.research.google.com</a>）。免费 T4（16GB 显存）即可跑 7B QLoRA；注意会话时长限制。</li>
+<li><b>延伸 · 显存账本实战</b>：动笔前先用 c25 的计算器核一遍你的模型/量化/长度组合——"先算账再开机"能省掉大半 OOM 报错。</li>
+</ul></details>`,
+    quiz: [
+      { q: '本机 MLX 与 Colab 各自的定位一句话？', kind: 'text', why: 'MLX：小模型、本机、免费随时跑，重在理解原理；Colab：CUDA 工业栈、7B QLoRA，重在见识标准流程。' },
+      { q: '为什么建议 LLaMA-Factory 先行、裸代码随后？', kind: 'text', why: '全局感先行：知道端到端有哪些环节，再逐个深挖——避免在第一环就迷失于细节。' },
+    ],
+    sim: null,
+  },
+
+  // ============ 组 H · 阶段 4：推理 ============
+  {
+    id: 'c28', group: '阶段 4 · 推理', title: 'MoE：专家分诊', mech: '路由打分 → top-k 激活 → 加权混合',
+    read: `
+<p>模型要变聪明，最直接的办法是变大——但稠密模型的参数全员参与每次计算，大=慢=贵。MoE（Mixture of Experts）的答案是把 FFN 层拆成<b>多个"专家"，每个 token 只找最相关的 k 个</b>：路由器（一个小网络）给所有专家打分，选 top-k 加权混合，其余休眠。于是出现了一个反直觉的关键词：<b>参数多 ≠ 计算多</b>——Mixtral 8×7B 总参 47B，每 token 实际只激活 ~13B。</p>
+<p>右侧路由模拟器可以亲手"当路由器"：选不同输入，看打分怎么变、top-2 选了谁、top-k 拉满会发生什么。注意那个代价标签：<b>省计算不省显存</b>——所有专家都得常驻显存（这也正是 FreeToken 那类边缘推理引擎要解决的核心矛盾：把用得多的专家缓存到快存储）。</p>
+<p class="soul">🤔 留给你想：如果路由器把所有 token 都送给同一个"明星专家"（负载失衡），模型会发生什么？——所以 MoE 训练里有个专门的"负载均衡损失"逼着雨露均沾。想想公司里"能者多劳"的极限在哪。</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>Fedus et al.《Switch Transformer》</b>（<a href="https://arxiv.org/abs/2101.03961" target="_blank">arXiv:2101.03961</a>, 2021）。top-1 路由的极简 MoE，李沐 MoE 精读（<a href="https://www.bilibili.com/video/BV1EM411T7bn" target="_blank">BV1EM411T7bn</a>）的主讲对象。</li>
+<li><b>Mistral《Mixtral of Experts》</b>（<a href="https://arxiv.org/abs/2401.04088" target="_blank">arXiv:2401.04088</a>, 2024）。开源 MoE 的代表作，8 选 2。</li>
+<li><b>延伸 · 与 FreeToken 的连线</b>：路径文档的进阶目标 FreeToken 做的正是"MoE 专家缓存与 CPU-GPU 协同"——c28 是读懂它论文的直接前置。</li>
+</ul></details>`,
+    quiz: [
+      { q: 'MoE 省的是什么、不省的是什么？', kind: 'text', why: '省每 token 的计算量（只激活 k 个专家）；不省显存（全部专家必须常驻）。"大而不慢，但占地"。' },
+      { q: '负载均衡损失是干什么的？', kind: 'text', why: '防止路由器把流量全灌给少数明星专家——失衡 = 其余专家白装 + 被冷落的专家学不到东西。' },
+    ],
+    sim: { type: 'moe' },
+  },
+  {
+    id: 'c29', group: '阶段 4 · 推理', title: 'KV Cache：生成的记账本', mech: '历史 K/V 存起来，新 token 只算自己',
+    read: `
+<p>生成是逐字循环（c18），但有个隐性的笨拙：每生成一个新字，注意力都要对"全部历史"重新打分——第 1000 个字要和前 999 个各算一遍，整个生成过程是 O(T²) 的。KV Cache 的解法一眼即懂：<b>历史的 K/V 是不变的，算一次存起来，新 token 只算自己的 Q</b>——每步代价恒定，总量从 O(T²) 掉到 O(T)。</p>
+<p>代价也明码标价：<b>KV cache 是显存里随 T 线性增长的账单</b>（7B 模型 fp16 约 0.5MB/token——4K 上下文就是 2GB/请求）。这就是 c23"上下文窗口"的物理本质，也是 vLLM 的 PagedAttention 要治的病：它借鉴操作系统虚拟内存的分页思想，把碎片化的 KV cache 管理起来，同一张卡塞下多几倍的并发请求。右侧计算器把这两笔账摊开给你。</p>
+<p class="soul">🤔 留给你想：KV cache 是"时间换空间"还是"空间换时间"？（用显存换计算——再进一步：当显存成为瓶颈时，FreeToken 们选择把 cache 分层到 CPU 内存——每一层优化都是上一层的矛盾的延续。）</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>Kwon et al.《Efficient Memory Management for LLM Serving with PagedAttention》</b>（<a href="https://arxiv.org/abs/2309.06180" target="_blank">arXiv:2309.06180</a>, 2023）。vLLM 原论文。</li>
+<li><b>延伸 · 数字标尺</b>：0.5MB/token（7B fp16）——自己乘一乘 8K 上下文与并发 32 路各要多少显存，vLLM 的价值立刻具象。</li>
+<li><b>延伸 · 与 c23 的闭环</b>：上下文窗口 = KV cache 的预算上限。"为什么长上下文模型贵"——现在你知道答案在哪本账上。</li>
+</ul></details>`,
+    quiz: [
+      { q: 'KV cache 缓存的是哪些张量？为什么可以缓存？', kind: 'text', why: '历史 token 的 K 与 V。因为它们只由"过去"决定，生成新 token 时不会变化——变的只有新 token 自己的 Q。' },
+      { q: 'PagedAttention 借鉴了操作系统的什么机制解决什么问题？', kind: 'text', why: '虚拟内存分页：把 KV cache 切成固定小块管理，消灭碎片、提高显存利用率 → 同卡并发吞吐翻倍以上。' },
+    ],
+    sim: { type: 'kvcache' },
+  },
+  {
+    id: 'c30', group: '阶段 4 · 推理', title: '部署：本地推理与量化对比', mech: 'Ollama / LM Studio / vLLM',
+    read: `
+<p>理论收齐，动手三部曲：<b>① 本机跑通</b>——Ollama 或 LM Studio 拉一个 7B Q4 模型，它们都提供 OpenAI 兼容接口（用 <code>curl</code> 或 Python 客户端就能调）；<b>② 量化对比</b>——同一模型 Q4 版 vs transformers 原精度版问同样的问题，记录速度与质量的两处可感知差异；<b>③ 云端进阶</b>——Colab 上用 vLLM 起服务，体会"生产级并发"是什么感觉。</p>
+<p>"OpenAI 兼容接口"值得单独咂摸：全行业的推理服务（Ollama/vLLM/各家云）都说同一套 HTTP 方言——这意味着你的客户端代码写一次，换后端零修改。这是生态的黏合剂，也是你阶段 5 项目敢随便换模型的原因。</p>
+<p>量化对比时要回答路径文档的两个问题：Q4 比 FP16 快多少（本机 MPS 上的 tokens/s）？质量损失在哪里可感知（数学？长句连贯性？指令遵循？）——答案写进笔记，S31 答辩要交。</p>
+<p class="soul">🤔 留给你想：量化是"压缩知识"——4-bit 丢掉的是哪一部分？（多数是权重的精度噪声。）由此推：什么任务对量化最不敏感，什么任务最先露馅？</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>Ollama</b>（<a href="https://ollama.com" target="_blank">ollama.com</a>）。一行命令本机跑量化模型，自带 OpenAI 兼容接口；模型用完记得 <code>ollama rm</code> 清理（路径文档的磁盘纪律）。</li>
+<li><b>llama.cpp</b>（<a href="https://github.com/ggerganov/llama.cpp" target="_blank">GitHub</a>）。Ollama 与 LM Studio 背后的引擎，GGUF 量化格式的老家；Mac 上 Metal 加速的一线功臣。</li>
+<li><b>vLLM</b>（<a href="https://docs.vllm.ai" target="_blank">docs.vllm.ai</a>）。生产级推理服务，S30 的 Colab 实验主角。</li>
+</ul></details>`,
+    quiz: [
+      { q: '"OpenAI 兼容接口"为什么重要？', kind: 'text', why: '统一 HTTP 方言让客户端与推理后端解耦：本地 Ollama、云端 vLLM、商业 API 换着用，代码零修改。' },
+      { q: '量化对比实验要记录的两组数据是什么？', kind: 'text', why: '速度（tokens/s，同问题同设备）与质量（可感知差异点：数学/连贯性/指令遵循），各留具体例子。' },
+    ],
+    sim: null,
+  },
+
+  // ============ 组 I · 阶段 5：项目 ============
+  {
+    id: 'c31', group: '阶段 5 · 项目', title: '选题与范围控制', mech: '小而完整 > 大而残缺',
+    read: `
+<p>阶段 5 最大的风险不是技术，是<b>范围失控</b>。路径文档给了三个经过筛选的选题（领域问答 / 本地知识库 / 风格模仿），共同点是：<b>数据 → 模型 → 服务 → 交付</b>四环都能在一到两周内走完。选题判断只有一条标准：四环里你最想练哪一环，它就该是项目的重心，其余三环用最省事的方案凑合。</p>
+<p>两个过来人法则：① <b>数据先行</b>——第一天就确定并放好数据，模型环节卡住时你随时能换方案而不换数据；② <b>砍需求不砍环节</b>——宁可做一个"只能答 20 个问题"的完整项目，不要一个"什么都能答"的半成品。这与你这几个月在实验总仓里练的 commit 纪律是同一条哲学：小步完整。</p>
+<p class="soul">🤔 留给你想：三个选题分别把重心压在"检索""纯本地部署""数据与微调"上。你的工作/兴趣里，哪个问题你真的想问它？——答案决定选题，动力决定完成度。</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>路径文档 · 8.2 选题建议表</b>（仓库根 README）。三选题的技术组合与适合人群对照。</li>
+<li><b>延伸 · "Scratch your own itch"</b>：解决自己真实痛点的小项目，几乎总是完成度最高——选题会议上一票否决权的来源。</li>
+</ul></details>`,
+    quiz: [
+      { q: '阶段 5 项目不可缺的四环是？', kind: 'text', why: '数据准备 → 模型环节 → 服务封装 → 交付（README + 演示）。砍需求不砍环节。' },
+      { q: '"数据先行"防的是什么风险？', kind: 'text', why: '模型环节返工时不牵连数据——数据是项目的锚，模型只是可替换的实现。' },
+    ],
+    sim: null,
+  },
+  {
+    id: 'c32', group: '阶段 5 · 项目', title: 'RAG：检索增强的骨架', mech: '查询 → 检索 → 拼prompt → 生成',
+    read: `
+<p>RAG（Retrieval-Augmented Generation）是"领域问答"选题的心脏，机制朴素得令人感动：<b>模型不背答案，开卷考试</b>——查询先去知识库里检索最相关的几段文档，把它们拼进 prompt，再让模型"仅依据资料回答"。右侧模拟器就是一个手搓的迷你 RAG：4 段文档、字符重合度当"embedding"、top-k 检索、拼装 prompt 全流程可见。</p>
+<p>两个必须想清楚的工程判断：① <b>检索质量决定上限</b>——检索不到 = 模型再强也白搭（垃圾进垃圾出），所以 embedding 模型的选型（路径文档推荐 bge 系列）和切块策略值得花一半精力；② <b>RAG vs 微调的分界</b>——知识频繁变 → RAG；行为风格要改 → 微调；两者常组合（微调定风格，RAG 供事实）。</p>
+<p class="soul">🤔 留给你想：右侧模拟器的"embedding"只是字符重合度，查"显卡"时"GPU"相关文档就查不到——真实 RAG 用语义向量解决这个问题。语义向量本质上是在做什么？（把"意思相近"变成"几何上相近"。）</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>Lewis et al.《RAG》</b>（<a href="https://arxiv.org/abs/2005.11401" target="_blank">arXiv:2005.11401</a>, 2020）。检索增强生成的原始论文——开卷考试思想的学术化。</li>
+<li><b>BAAI/bge 系列 embedding</b>（Hugging Face 搜索 bge）。中文语义检索的常用开源 embedding，路径文档钦点。</li>
+<li><b>延伸 · 切块（chunking）</b>：文档切多大、切在哪，是 RAG 里最不起眼却最影响检索质量的决策——先切句子，再按需合并，是稳妥起点。</li>
+</ul></details>`,
+    quiz: [
+      { q: 'RAG 四步流水线是？', kind: 'text', why: '知识切块入库（向量化）→ 查询向量化 → 检索 top-k → 拼进 prompt 让模型依据作答。' },
+      { q: '什么时候选 RAG 而不是微调？', kind: 'text', why: '知识频繁更新、需要引用来源、改动成本要低——RAG 改知识库即可；微调改的是行为风格。' },
+    ],
+    sim: { type: 'rag' },
+  },
+  {
+    id: 'c33', group: '阶段 5 · 项目', title: '交付与作品集', mech: 'FastAPI + README + 演示',
+    read: `
+<p>项目的最后一公里决定它是"练手的代码"还是"作品集的门面"。三件套按优先级排：<b>① FastAPI 服务封装</b>——一个 <code>POST /chat</code> 端点 + 一个能交互的前端页（Streamlit 或纯 HTML 都行），让陌生人不看代码就能用；<b>② README 五要素</b>——动机、数据、方法、效果对比、已知限制（最后一条最加分：诚实的限制比吹嘘的效果更专业）；<b>③ 两分钟演示视频</b>——录屏配三句话旁白，挂 README 顶部。</p>
+<p>验收标准路径文档已定：一位不了解项目的同行，十分钟内照 README 复现运行效果。自测方法很坏但有效：<b>找一个没参与过的朋友，只给他 README 和仓库链接</b>，计时。卡在哪，README 就改哪。</p>
+<p>走完这一步，入门期正式毕业：六阶段、一条路径、一个公开的 llm-journey。前面是推理系统方向的自由度——从 FreeToken 的论文开始。</p>
+<p class="soul">🤔 留给你想：作品集的读者其实是"三个月后的你"和"未来的面试官"——同一份 README 要同时服务这两种人，写作时你会怎么平衡？（提示：给前者写"怎么复现"，给后者写"为什么这样做"。）</p>
+<details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
+<li><b>FastAPI 官方文档</b>（<a href="https://fastapi.tiangolo.com" target="_blank">fastapi.tiangolo.com</a>）。自带交互式文档（/docs）——封装 LLM 服务的最短路径。</li>
+<li><b>swyx《Learn In Public》</b>（swyx.io）。你的 llm-journey 已经在做的事：把学习公开化，复利来自持续。</li>
+<li><b>FreeToken</b>（<a href="https://github.com/FlashML-org/FreeToken" target="_blank">GitHub</a> / arXiv:2608.16157）。毕业后的第一站：先精读论文，再对照源码看专家缓存与调度——路径文档第 10 章的进阶衔接。</li>
+</ul></details>`,
+    quiz: [
+      { q: 'README 五要素是？哪一条最加分？', kind: 'text', why: '动机、数据、方法、效果对比、已知限制。"已知限制"最加分——诚实的边界感是工程成熟度的信号。' },
+      { q: '验收的"十分钟复现"测试怎么执行？', kind: 'text', why: '找未参与的人，只给 README + 仓库链接，计时走完全流程；卡点 = README 的修改清单。' },
+    ],
+    sim: null,
+  },
 ];
