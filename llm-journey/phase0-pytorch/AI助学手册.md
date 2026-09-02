@@ -7,7 +7,7 @@
 
 ## Web 互动课程（每场开动前的 10 分钟预演）
 
-`phase0-pytorch/web/` 下 `npm install && npm run dev` 后访问 http://localhost:5173。**预备课 c00 + 12 章**互动课程与本章场次一一对应（零基础先从 c00 的张量阶梯玩起）：
+`llm-journey/web/` 下 `npm install && npm run dev` 后访问 http://localhost:5173（平台由阶段 0/1 共享）。**预备课 c00 + 阶段 0 的 12 章**互动课程与本章场次一一对应（零基础先从 c00 的张量阶梯玩起）：
 每章 = **阅读视图**（讲透一个机制 + 内嵌预测题）+ **模拟器视图**（在浏览器里玩这个机制）。
 建议节奏：先玩对应章节的模拟器建立直觉 → 再来本场的 Python 实战 → 产出物落库。
 映射表见 [`web/README.md`](web/README.md)；c06–c08 对应的 S3/S4 是禁写区场次，web 只用于看机制跑起来的样子。
@@ -86,7 +86,15 @@
 ### S9 · 总答辩 + 沉淀（1.5h）
 - [`tutor/defense_训练循环_10问.md`](tutor/defense_训练循环_10问.md) 全量答辩。
 - 回顾误解记录本，把全部复习题拼成一次自测。
-- `git tag phase0-graduate` → 进入阶段 1。
+- `git tag phase0-graduate` → **阶段 0 毕业 🎓**
+
+## 毕业 → 阶段 1 衔接（S9 完成后做这三件事）
+
+阶段 1（从零手写 Transformer）的材料已就绪，位于 [`../phase1-transformer/`](../phase1-transformer/)：
+
+1. 打开 [阶段 1 · AI助学手册](../phase1-transformer/AI助学手册.md)——场次 S10–S16，约 3 周；
+2. Web 课程**不用换地方**：c13–c18 章就是阶段 1 的内容（分词 → 注意力 → GPT → 采样），继续用同一平台；
+3. 老规矩"先玩模拟器再动手"：c14 的注意力交互台是阶段 1 最重要的直觉来源。
 
 ---
 

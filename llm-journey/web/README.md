@@ -1,4 +1,4 @@
-# 阶段 0 · Web 互动课程平台
+# llm-journey · Web 互动课程平台（阶段 0/1 共享）
 
 形式借鉴 [learn-claude-code](https://github.com/shareAI-lab/learn-claude-code)：
 **预备课 + 阶段 0/1 共 18 章递进、每章只加一个机制、Web 多视图**（阅读 + 模拟器）。
@@ -7,7 +7,7 @@
 ## 打开方式
 
 ```bash
-cd phase0-pytorch/web
+cd llm-journey/web
 npm install
 npm run dev        # 开发模式（改内容热更新），访问 http://localhost:5173
 npm run build      # 生产构建 → dist/（48KB，可静态托管）

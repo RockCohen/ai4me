@@ -53,3 +53,7 @@
 | jupyter 找不到本环境内核 | 根目录执行 `python -m ipykernel install --user --name llm-journey` |
 | 训练时报错 MPS 不支持某算子 | 该算子回退 CPU 即可：`tensor.cpu()` 或对整段小代码用 `device='cpu'`，不影响学习 |
 | matplotlib 中文乱码 / 不出图 | notebook 开头加 `%matplotlib inline`；标签可暂用英文 |
+
+## 六、毕业去向 → 阶段 1
+
+通过验收后：`git tag phase0-graduate`，进入 [../phase1-transformer/](../phase1-transformer/README.md)——从零手写 Transformer（阶段 1 材料已就绪：6 章互动课程 c13–c18 + 场次手册 S10–S16 + 练习骨架）。

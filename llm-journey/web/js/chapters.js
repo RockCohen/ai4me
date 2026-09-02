@@ -1,7 +1,7 @@
-// chapters.js — 阶段 0 的 13 章课程内容
+// chapters.js — 互动课程内容（预备课 + 阶段 0 的 13 章 + 阶段 1 的 6 章 = 19 章）
 // 形式借鉴 learn-claude-code：每章只加一个机制；阅读视图 + 模拟器视图 + 内嵌预测题。
 // 写作原则：真实问题开路 → 机制 → 为什么成立 → 🤔 留给你想 → 🏛 权威佐证（可查证一手资料）。
-// 章节对应 Python 实战场次（S1–S9，见 ../AI助学手册.md）。
+// 场次映射：阶段 0 见 phase0-pytorch/AI助学手册.md；阶段 1 见 phase1-transformer/AI助学手册.md。
 export const CHAPTERS = [
   // ============ 组 0 · 预备课 ============
   {
@@ -40,7 +40,7 @@ export const CHAPTERS = [
 
   // ============ 组 A · 张量 ============
   {
-    id: 'c01', group: '张量', title: '形状与广播', mech: 'broadcasting 末维对齐',
+    id: 'c01', group: '阶段 0 · 张量', title: '形状与广播', mech: 'broadcasting 末维对齐',
     read: `
 <p class="tip">🔗 前置：<b>c00 预备课</b>。"张量""形状 (3,4)"这两个说法还不踏实的话，先回上一章玩 10 分钟张量阶梯。</p>
 <p>设想一个真实任务：一万张图，每张都要减去自己的平均亮度。笨办法是再造一万张"平均图"来相减；而你脑内的直觉说的是另一句话——<b>"把这一个数，摊给每个像素就行。"</b>恭喜，你的直觉就是广播（broadcasting）。NumPy 官方文档做的，只是把这条直觉写成了法律条文。</p>
@@ -67,7 +67,7 @@ export const CHAPTERS = [
     sim: { type: 'tensor' },
   },
   {
-    id: 'c02', group: '张量', title: '视图与内存共享', mech: 'view/transpose 零拷贝',
+    id: 'c02', group: '阶段 0 · 张量', title: '视图与内存共享', mech: 'view/transpose 零拷贝',
     read: `
 <p>调试圈的"都市传说"排行榜上，这一条常年霸榜：<i>"我真的没动它，它自己变的。"</i>破案线索只有一个：<code>view / reshape / t() / 切片</code> 这些形状操作<b>不复制数据</b>——它们返回的"视图"和原张量指向<b>同一块内存</b>。</p>
 <p>理解它的钥匙是：一个张量 = 一坨数据 + 一份"怎么看这坨数据"的说明书（形状 + 步长）。<code>view(4,3)</code> 只是重写了说明书，数据原地不动。这既是性能的礼物（深层网络里 reshape 每秒发生千万次，零拷贝），也是 bug 的温床（改视图 = 改原张量）。右侧预设 ④ 是案发现场：<code>b = a.view(4,3)</code> 之后改 <code>b[0,0]</code>，<code>a[0,0]</code> 同步变 99。</p>
@@ -89,7 +89,7 @@ export const CHAPTERS = [
 
   // ============ 组 B · autograd ============
   {
-    id: 'c03', group: 'autograd', title: '计算图与 backward', mech: '动态建图 + 链式法则',
+    id: 'c03', group: '阶段 0 · autograd', title: '计算图与 backward', mech: '动态建图 + 链式法则',
     read: `
 <p>1986 年，Rumelhart、Hinton 与 Williams 在《Nature》上发表了一篇短短几页的论文《Learning representations by back-propagating errors》，让"反向传播"一举复活——今天所有神经网络训练，都是这篇论文的续集。它优雅到只有一个数学内核：<b>微积分的链式法则</b>（莱布尼茨时代就有的老规矩）。</p>
 <p>PyTorch 的做法是把链式法则"工程化"：每一次运算都在现场搭一张<b>计算图</b>——节点是张量，边是运算。调用 <code>loss.backward()</code> 时，从 loss 出发<b>沿图反向</b>，把梯度逐节点回传，累加进每个叶子张量的 <code>.grad</code>。PyTorch 用的是"动态图"：像即兴爵士，每个迭代现场编曲；与之相对的 TensorFlow 1.x 是"静态图"：先写总谱再演奏。</p>
@@ -111,7 +111,7 @@ export const CHAPTERS = [
     sim: { type: 'autograd' },
   },
   {
-    id: 'c04', group: 'autograd', title: '梯度累加与清零', mech: '.grad 是 += 语义',
+    id: 'c04', group: '阶段 0 · autograd', title: '梯度累加与清零', mech: '.grad 是 += 语义',
     read: `
 <p>先看一段"程序员的禅"——《The Zen of Python》（Python 之禅，Tim Peters 写于 1999 年，PEP 20）第 2 条：<b>Explicit is better than implicit</b>（显式优于隐式）。PyTorch 把这句禅执行到了 .grad 上：<b>梯度是累加的（+=），且框架绝不替你清零</b>。</p>
 <p>为什么这是立场而不是疏忽？因为"累加"本身是能力：梯度累积（小显存模拟大 batch）、多个损失合并求和，全靠它。框架要是好心替你清零，这些玩法就全废了。代价是：清零的责任落到训练循环头上（<code>optimizer.zero_grad()</code>）——而新手世界的第一大 bug，就诞生在这份被交还的责任里。</p>
@@ -132,7 +132,7 @@ export const CHAPTERS = [
     sim: { type: 'autograd' },
   },
   {
-    id: 'c05', group: 'autograd', title: '手写线性回归', mech: '无框架训练循环',
+    id: 'c05', group: '阶段 0 · autograd', title: '手写线性回归', mech: '无框架训练循环',
     read: `
 <p>"回归"这个词，是维多利亚时代一位绅士的失误。1886 年，弗朗西斯·高尔顿（达尔文的表弟）研究父母身高与子女身高的关系，发现子女身高会向平均值缩——他称之为 <i>regression towards mediocrity</i>（向平庸回归）。"回归分析法"从此得名，尽管今天的回归早已不管平庸不平庸。更早，1801 年高斯用最小二乘法从寥寥几笔观测中算出了失踪谷神星的轨道，震动天文界——"用一条直线去拟合散点"这件事，比神经网络早了整整两个世纪。</p>
 <p>把 c03/c04 拼起来，你就在做高斯当年做的事，只是求导交给了 autograd：</p>
@@ -162,7 +162,7 @@ export const CHAPTERS = [
 
   // ============ 组 C · micrograd ============
   {
-    id: 'c06', group: 'micrograd', title: 'Value：一个节点', mech: 'data + grad + _children + _backward',
+    id: 'c06', group: '阶段 0 · micrograd', title: 'Value：一个节点', mech: 'data + grad + _children + _backward',
     read: `
 <p>SICP（《计算机程序的构造和解释》，MIT 传奇教材）序言里有一句话：<b>"程序是写给人读的，只是顺便让机器执行。"</b>本章就是一个绝佳的检验品：Karpathy 的 micrograd 只有约百行，却能训练出真的神经网络。它敢这么短，是因为它找到了<b>最小完备原语</b>——一个叫 <code>Value</code> 的类，四件东西：</p>
 <pre>class Value:
@@ -188,7 +188,7 @@ export const CHAPTERS = [
     sim: { type: 'autograd' },
   },
   {
-    id: 'c07', group: 'micrograd', title: '拓扑排序与全图反向', mech: '逆拓扑序调用 _backward',
+    id: 'c07', group: '阶段 0 · micrograd', title: '拓扑排序与全图反向', mech: '逆拓扑序调用 _backward',
     read: `
 <p>有了单节点的 <code>_backward</code>，全图反向只剩一个看起来人畜无害的问题：<b>按什么顺序调用？</b>答案藏在一个 1962 年就解决的问题里——拓扑排序（ Knuth《计算机程序设计艺术》第一卷里有经典论述，它原本的用场是装配线和菜谱：先切菜，再下锅）。</p>
 <p>规则一句话：<b>一个节点的 _backward，必须在它所有的下游消费者都处理完之后才执行</b>——否则它读到的 out.grad 还不完整。深度优先后序遍历，再倒过来调用，约 8 行：</p>
@@ -219,7 +219,7 @@ export const CHAPTERS = [
     sim: { type: 'autograd' },
   },
   {
-    id: 'c08', group: 'micrograd', title: '从 Value 到 MLP', mech: 'Neuron / Layer / MLP 组装',
+    id: 'c08', group: '阶段 0 · micrograd', title: '从 Value 到 MLP', mech: 'Neuron / Layer / MLP 组装',
     read: `
 <p>神经网络的历史，是一部"捧杀与平反"的连续剧。1958 年，《纽约时报》报道 Rosenblatt 的感知机，用的是这样的句子：电子计算机的胚胎，将来会走路、说话、看见、书写、自我复制。1969 年，Minsky 与 Papert 用一本《Perceptrons》泼来冷水：一层感知机连 XOR（异或）都分不开。经费应声蒸发，史称第一次 AI 寒冬。</p>
 <p>平反来得也不快：1989 年 Cybenko、1991 年 Hornik 先后证明<b>万能近似定理</b>——一层足够宽的隐层，能近似任意连续函数。理论赢了，实践还是冷了半截："能近似"不等于"学得动"：要拟合同样的曲线，浅而宽的网络所需宽度往往指数爆炸，而<b>深</b>网络用少量参数层层折叠就做到了。深度学习的"深"，是效率的胜利，不是宽度的胜利。</p>
@@ -241,7 +241,7 @@ export const CHAPTERS = [
 
   // ============ 组 D · 训练循环与验收 ============
   {
-    id: 'c09', group: '训练循环', title: '五件套与单步执行', mech: 'batch → forward → zero_grad → backward → step',
+    id: 'c09', group: '阶段 0 · 训练循环', title: '五件套与单步执行', mech: 'batch → forward → zero_grad → backward → step',
     read: `
 <p>Karpathy 写过一篇被反复引用的博客，《A Recipe for Training Neural Networks》（训练神经网络的食谱）。顶配研究员把毕生经验写成"菜谱"这个行为，透露了一个本质：<b>训练循环就是一个仪式，步骤固定、顺序神圣</b>：</p>
 <pre>for epoch in range(epochs):          # 遍历全数据几轮
@@ -267,7 +267,7 @@ export const CHAPTERS = [
     sim: { type: 'trainer', cfg: { mode: 'classify', dataset: 'moons', hidden: [8, 8], lr: 0.5, showStep: true } },
   },
   {
-    id: 'c10', group: '训练循环', title: '坏代码门诊', mech: '5 个病灶的可视化症状',
+    id: 'c10', group: '阶段 0 · 训练循环', title: '坏代码门诊', mech: '5 个病灶的可视化症状',
     read: `
 <p>Karpathy 那篇《食谱》的第一节标题叫 <b>Don't be a hero</b>（别逞英雄）：训练中最重要的能力不是写出惊天架构，而是<b>盯着数字、相信读数、别脑补</b>。本章是这句话的实操课——深度学习与"传统软件"最大的分歧在此：传统程序坏了会崩（抛异常），<b>神经网络坏了只会变差</b>。它不崩溃，只堕落。</p>
 <p>所以医生思路是最好的思路：先记健康人的体征（基线），再看病人哪里偏离。右侧训练场给你 5 个可勾选的"病灶"，勾上再训练，对照观察症状：</p>
@@ -296,7 +296,7 @@ export const CHAPTERS = [
     sim: { type: 'trainer', cfg: { mode: 'classify', dataset: 'moons', hidden: [8, 8], lr: 0.2, bugs: { noZeroGrad: false, bigLr: false, noBackward: false, doubleAct: false, noEvalDropout: false } } },
   },
   {
-    id: 'c11', group: '训练循环', title: '真实数据：Fashion-MNIST', mech: '数据 → 模型 → 训练 → 验证',
+    id: 'c11', group: '阶段 0 · 训练循环', title: '真实数据：Fashion-MNIST', mech: '数据 → 模型 → 训练 → 验证',
     read: `
 <p>先讲一个数据集的"人事更迭"。MNIST 手写数字，1998 年 LeCun 团队为邮件分拣与支票识别而造（那篇论文后来成了《Proceedings of the IEEE》的名篇）。此后二十多年，它被全人类反复刷榜——直到 2017 年，电商 Zalando 的研究团队发了一篇短文宣布：MNIST 太简单、太旧、被"洗"得太熟了，我们造了 Fashion-MNIST：同尺寸、同格式、换成 10 类服饰，肉眼更难。你要用的就是它。</p>
 <p>这个故事有个经济学注脚，叫 <b>Goodhart 定律</b>：当一个指标变成目标，它就不再是个好指标。MNIST 99% 的准确率早已没有信息量——数据集本身也会"老化"。</p>
@@ -321,7 +321,7 @@ export const CHAPTERS = [
     sim: null,
   },
   {
-    id: 'c12', group: '训练循环', title: '脱稿验收', mech: '断 AI 演练 + 考官制',
+    id: 'c12', group: '阶段 0 · 训练循环', title: '脱稿验收', mech: '断 AI 演练 + 考官制',
     read: `
 <p>费曼去世后，人们在他在 Caltech 的办公室黑板上，留下了这样一行字：<b>"What I cannot create, I do not understand."</b>（我造不出的东西，就代表我不懂。）这块黑板今天还在。本章的验收制度，就是把这行字变成流程。</p>
 <p>整个 AI 助学模式的两道护栏，在此闭合：</p>
@@ -330,6 +330,7 @@ export const CHAPTERS = [
 <p>最后用 <code>tutor/defense_训练循环_10问.md</code> 全量答辩（≥8 题讲清），然后：</p>
 <pre>git tag phase0-graduate</pre>
 <p>下一站：阶段 1，从空文件手写一个能生成文本的 GPT。费曼那行黑板的下一个词，你会亲手创造出来。</p>
+<p class="tip">🔗 衔接提示：从下一章 c13 起，课程内容就属于<b>阶段 1 · 手写 Transformer</b> 了；Python 实战主场换到 <code>phase1-transformer/</code>（场次手册 S10 起步，材料已就绪）。</p>
 <p class="soul">🤔 留给你想：AI 时代，"能查到"和"会"的边界在哪里？一个可操作的定义：当工具不在时你剩下来的东西。你的"剩下来的东西"，现在有多少了？</p>
 <details class="refs"><summary>🏛 权威佐证与延伸</summary><ul>
 <li><b>费曼的 Caltech 黑板（1988）</b>。那行"我造不出的东西，就代表我不懂"只是黑板上的一句话——旁边还写着另一条未竟清单："Know how to solve every problem that has been solved"（搞懂每一个已被解决的问题）。天才的谦逊，是以"已解决"为下限的。这块黑板的照片至今流传，值得设成壁纸。</li>
@@ -346,8 +347,9 @@ export const CHAPTERS = [
 
   // ============ 组 E · 阶段 1：Transformer ============
   {
-    id: 'c13', group: 'Transformer', title: '分词：文本如何变成数字', mech: '字符级 / 词级 / BPE',
+    id: 'c13', group: '阶段 1 · Transformer', title: '分词：文本如何变成数字', mech: '字符级 / 词级 / BPE',
     read: `
+<p class="tip">🚦 从本章起进入<b>阶段 1 · 手写 Transformer</b>——阶段 0 的五件套、禁写区纪律全部沿用。Python 实战主场换到 <code>phase1-transformer/</code>，场次从 S10 起步（见其 AI助学手册）。</p>
 <p>阶段 1 的终点是一个"会写文章"的模型。但神经网络只吃数字（c00 的阶梯），于是第一个问题来了：<b>"文章"怎么变成数字？</b>这就是分词（tokenization）——它决定了模型世界的"原子"是什么。</p>
 <p>右侧模拟器把同一段中英混排文本分别按<b>字符级</b>和<b>词级</b>切分：字符级把英文拆成单字母（序列很长但没有生词问题），词级切英文不错但中文粘连、"cat / cats"互不相认、生词直接词表外。Karpathy 的<a href="https://www.youtube.com/watch?v=kCc8FmEb1nY" target="_blank">《Let's build GPT》</a>开篇就选了最朴素的字符级——先跑通，再优化。</p>
 <p>GPT 真正用的是 <b>BPE</b>（字节对编码）：高频片段合并成 token、生词自动退回字符，在"序列长度"和"词表大小"之间动态找平衡。S16 的选做练习 minbpe 就是亲手实现它——大约 100 行。</p>
@@ -366,7 +368,7 @@ export const CHAPTERS = [
     sim: { type: 'tokenizer' },
   },
   {
-    id: 'c14', group: 'Transformer', title: '注意力：Q/K/V', mech: 'softmax(QKᵀ/√d)·V',
+    id: 'c14', group: '阶段 1 · Transformer', title: '注意力：Q/K/V', mech: 'softmax(QKᵀ/√d)·V',
     read: `
 <p>注意力机制的出生证明其实比 Transformer 早三年：2014 年 Bahdanau 等人在机器翻译论文里提出——翻译每个词时，"回头看"原文的相关词并按相关度加权。2017 年《Attention Is All You Need》走得更狠：<b>把整个模型全部换成注意力</b>，标题即宣言。李沐的论文精读（B 站）就是照着这篇讲的。</p>
 <p>机制一句话：每个 token 发出三种向量——<b>Query（我在找什么）</b>、<b>Key（我是什么标签）</b>、<b>Value（我的内容）</b>。Q 与所有 K 做点积 = 相关度打分；除以 √d 缩放后 softmax 成权重；再按权重混合所有 V：<code>out = softmax(QKᵀ/√d)·V</code>。整个公式一个 exel 表格就能算完——右侧交互台算的就是它，真实矩阵运算。</p>
@@ -387,7 +389,7 @@ export const CHAPTERS = [
     sim: { type: 'attention' },
   },
   {
-    id: 'c15', group: 'Transformer', title: '多头注意力', mech: 'H 个独立的 Q/K/V 投影',
+    id: 'c15', group: '阶段 1 · Transformer', title: '多头注意力', mech: 'H 个独立的 Q/K/V 投影',
     read: `
 <p>一个注意力头只能"盯一种关系"。多头注意力（multi-head）的解法透着朴素的智慧：<b>与其造一个全知的大头，不如造 H 个各司其职的小头</b>——每个头有独立的 W_q/W_k/W_v 投影，把 C 维通道切成 H 份（每头 C/H 维），各自算注意力，最后拼回来再线性混合。</p>
 <p>在右侧交互台切换「头 A / 头 B」：同样的句子、同样的机制，两个头学到的权重模式完全不同——这正是设计意图（真实大模型里，有的头盯语法、有的头盯指代、有的头几乎均匀铺开当"保底"）。工程上还有个妙处：多头<b>不增加计算量</b>——每头维度是 C/H，总量与单头 C 维相同，只是把预算分散投资。</p>
@@ -405,7 +407,7 @@ export const CHAPTERS = [
     sim: { type: 'attention' },
   },
   {
-    id: 'c16', group: 'Transformer', title: 'Block：残差与 LayerNorm', mech: 'LN → 注意力/MLP → 残差',
+    id: 'c16', group: '阶段 1 · Transformer', title: 'Block：残差与 LayerNorm', mech: 'LN → 注意力/MLP → 残差',
     read: `
 <p>光有注意力还叠不出深网络。Transformer 的基本积木是 <b>Block</b>，配方固定：<code>x = x + 注意力(LN(x))</code>，再来一遍 <code>x = x + MLP(LN(x))</code>——两个零件（注意力负责 token 间交流，MLP 负责 token 内加工），一个胶水（<b>残差</b>），一个稳定器（<b>LayerNorm</b>）。</p>
 <p><b>残差</b>（ResNet, 2015）是深度学习的救命稻草：相加让梯度有了"高速公路"，100 层不再是奢望——你能在 c07 的计算图上亲手验证：加法节点的梯度原样回传。<b>LayerNorm</b>（Ba et al., 2016）按"每个 token 的特征维"归一化（对比 BatchNorm 按批统计——变长序列、batch 内句子互不相干，NLP 天然选 LN）。还有个承前启后的细节：原始论文把 LN 放在子层之后（Post-LN），GPT-2 改成放在之前（Pre-LN）——<b>你 c17 要抄的 GPT 用的是 Pre-LN</b>，深网络下更稳。</p>
@@ -425,7 +427,7 @@ export const CHAPTERS = [
     sim: null,
   },
   {
-    id: 'c17', group: 'Transformer', title: '组装：字符级 GPT 全景', mech: '嵌入 → L×Block → LN → lm_head',
+    id: 'c17', group: '阶段 1 · Transformer', title: '组装：字符级 GPT 全景', mech: '嵌入 → L×Block → LN → lm_head',
     read: `
 <p>万事俱备：分词（c13）把文本变成 token id；注意力（c14/c15）让 token 交流；Block（c16）把它们叠深。组装表只有五行：</p>
 <ol>
@@ -451,7 +453,7 @@ export const CHAPTERS = [
     sim: { type: 'shapes' },
   },
   {
-    id: 'c18', group: 'Transformer', title: '生成：温度与 top-k', mech: 'logits ÷ T → softmax → 截断采样',
+    id: 'c18', group: '阶段 1 · Transformer', title: '生成：温度与 top-k', mech: 'logits ÷ T → softmax → 截断采样',
     read: `
 <p>训练好的 GPT 怎么写文章？逐字符循环：<b>喂上文 → 得到词表上的打分（logits）→ 变成概率 → 采一个字 → 拼回上文 → 重复</b>。关键全在"变成概率"这一步的两个旋钮：</p>
 <p><b>温度 T</b>：logits ÷ T 再 softmax。T→0：分布尖锐化，永远选最高分（贪心，稳定但车轱辘话）；T=1：原始分布；T&gt;1：分布摊平，冷门字符上位（有创意，也可能胡言乱语）。公式与统计力学的 Boltzmann 分布同源——"温度"是物理学家借来的词。<b>top-k</b>：只保留分数前 k 个候选再归一化，把长尾的"怪字"一刀切掉。</p>

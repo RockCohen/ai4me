@@ -14,7 +14,8 @@ llm-journey/
 │   └── verify_env.py       # 环境自检脚本（MPS 后端、数据集、训练链路）
 ├── notes/                  # 跨阶段的通用笔记
 ├── data/                   # 数据集（已 gitignore，不入库）
-└── phase0-pytorch/         # 阶段 0：PyTorch 基础 + micrograd 复现
+├── web/                    # 🌐 互动课程平台（阶段 0/1 共享，npm run dev）
+├── phase0-pytorch/         # 阶段 0：PyTorch 基础 + micrograd 复现
     ├── AI助学手册.md        # ⚡ 互动式学习操作手册（场次表 + 每场操作单）
     ├── README.md           # 阶段 0 材料清单、任务清单、验收标准
     ├── micrograd/          # Karpathy/micrograd 参考仓库（学习期间只读）
@@ -24,7 +25,6 @@ llm-journey/
     │   ├── 02_micrograd/       # micrograd 复现（S3/S4 禁写区）
     │   ├── 03_d2l_mnist/       # d2l 教材 MNIST 训练（S7）
     │   └── 04_mnist_solo/      # 脱稿完整脚本（S8 验收）
-    ├── web/                 # 🌐 Web 互动课程平台（npm run dev）
     └── notes.md            # 阶段 0 学习笔记
 ├── phase1-transformer/     # 阶段 1：从零手写 Transformer 📚 材料就绪
     ├── AI助学手册.md        # 场次制学习流程（S10–S16）
