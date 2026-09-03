@@ -1,10 +1,9 @@
 // anim.js — 3Blue1Brown 风格的数学动画剧场
-// 四个逐场景动画（字幕推进 + 单步控制）：
-//   matrix   矩阵 = 空间的变换（c01）        设计画布 980×560
-//   gradient 梯度下降 = 下山寻谷（c05）      设计画布 900×470
-//   chain    链式法则 = 敏感度回传（c07）    设计画布 900×470
-//   netflow  神经网络 = 信号的旅程（c08）    设计画布 900×470
-// 每帧：清屏 → 画场景。canvas 以 2× 分辨率渲染防模糊。
+// 原则：动画内容 = 章节内容本身。每个视觉元素都对应讲述中的一个具体量。
+//   broadcast（c01）广播的两步流程：右对齐 → 补 1 → 拉伸 → 相加，含失败案例
+//   linreg   （c05）梯度下降拟合真实数据点：线自己找到规律，lr 过大则发散
+//   chaindiamond（c07）章节原例 a·b + a·c + b·c：拓扑反向 + 菱形汇合的 += 时刻
+//   netflow  （c08）神经网络信号的旅程：前向点亮 + 反向回流
 export const Anim = (function () {
   'use strict';
 
@@ -32,165 +31,270 @@ export const Anim = (function () {
     ctx.fillStyle = fill; ctx.strokeStyle = stroke; ctx.lineWidth = 1.6;
     ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fill(); ctx.stroke();
   }
+  const BG = '#0d1322';
 
-  // ================= A1 · 矩阵 = 空间的变换（980×560） =================
-  function matrixScenes() {
+  // ================= c01 · 广播的两步流程（980×560） =================
+  function broadcastScenes() {
     const W = 980, H = 560;
-    const M = [[2, 1], [-1, 1]];
-    const Mt = t => [[1 + t * (M[0][0] - 1), t * M[0][1]], [t * M[1][0], 1 + t * (M[1][1] - 1)]];
-    const apply = (m, x, y) => [m[0][0] * x + m[0][1] * y, m[1][0] * x + m[1][1] * y];
-    const cx = 470, cy = 295, sc = 60;
+    const A = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]];
+    const B = [10, 20, 30, 40];
+    const B3 = [30, 10, 20];                  // 失败案例的一行（3 个）
+    const cw = 88, chh = 60, ax = 200, ay = 210;
 
-    function grid(ctx, m) {
-      ctx.lineWidth = 1.1;
-      for (let c = -4; c <= 4; c++) {
-        ctx.strokeStyle = c === 0 ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.13)';
-        for (const fixed of ['v', 'h']) {
-          ctx.beginPath();
-          for (let u = -4; u <= 4.01; u += 0.34) {
-            const [x, y] = fixed === 'v' ? apply(m, c, u) : apply(m, u, c);
-            const px = cx + x * sc, py = cy - y * sc;
-            u === -4 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-          }
-          ctx.stroke();
+    function grid(ctx, vals, alpha = 1, ghostRows = false) {
+      ctx.globalAlpha = alpha;
+      for (let i = 0; i < vals.length; i++) {
+        for (let j = 0; j < vals[i].length; j++) {
+          const x = ax + j * cw, y = ay + i * chh;
+          box(ctx, x, y, cw - 8, chh - 8, 'rgba(96,165,250,0.13)', 'rgba(96,165,250,0.4)', 9);
+          text(ctx, String(vals[i][j]), x + (cw - 8) / 2, y + (chh - 8) / 2 + 6, '#e6f0ff', 17, 'center', true, true);
         }
       }
+      ctx.globalAlpha = 1;
     }
-    function basis(ctx, m) {
-      const [ix, iy] = apply(m, 1, 0), [jx, jy] = apply(m, 0, 1);
-      arrow(ctx, cx, cy, cx + ix * sc, cy - iy * sc, '#60a5fa', 4);
-      text(ctx, `î → (${ix.toFixed(1)}, ${iy.toFixed(1)})`, cx + ix * sc + 12, cy - iy * sc + 26, '#60a5fa', 13);
-      arrow(ctx, cx, cy, cx + jx * sc, cy - jy * sc, '#4ade80', 4);
-      text(ctx, `ĵ → (${jx.toFixed(1)}, ${jy.toFixed(1)})`, cx + jx * sc + 12, cy - jy * sc - 12, '#4ade80', 13);
+    function rowCells(ctx, vals, y, alpha = 1, ghost = false) {
+      ctx.globalAlpha = alpha;
+      for (let j = 0; j < vals.length; j++) {
+        const x = ax + j * cw;
+        if (ghost) ctx.setLineDash([6, 5]);
+        box(ctx, x, y, cw - 8, chh - 8, ghost ? 'rgba(251,146,60,0.28)' : 'rgba(251,146,60,0.16)',
+          ghost ? 'rgba(251,146,60,0.85)' : 'rgba(251,146,60,0.75)', 9);
+        ctx.setLineDash([]);
+        text(ctx, String(vals[j]), x + (cw - 8) / 2, y + (chh - 8) / 2 + 6, '#ffd9a8', 17, 'center', true, true);
+      }
+      ctx.globalAlpha = 1;
     }
-
-    return { w: W, h: H, scenes: [
-      { cap: '平面上任何一点 (x, y)，都能由两个基向量到达：(x, y) = x·î + y·ĵ。橙色点 = (3, 2)。', dur: 6,
-        draw(ctx, p) { grid(ctx, Mt(0)); basis(ctx, Mt(0));
-          const t = ease(Math.min(1, p * 2));
-          ctx.globalAlpha = 0.35 + 0.65 * t;
-          ctx.fillStyle = '#ffb86b'; ctx.beginPath(); ctx.arc(cx + 3 * sc * t, cy - 2 * sc * t, 8, 0, TAU); ctx.fill();
-          ctx.globalAlpha = 1;
-          text(ctx, '(3, 2)', cx + 3 * sc * t + 14, cy - 2 * sc * t - 10, '#ffb86b', 14); } },
-      { cap: '矩阵 M 登场：它的每一列，就是基向量要去的新位置——î 去往 (2, −1)，ĵ 去往 (1, 1)', dur: 7,
-        draw(ctx, p) { const t = ease(p); const m = Mt(t); grid(ctx, m); basis(ctx, m);
-          text(ctx, `M = [[${m[0][0].toFixed(2)}, ${m[0][1].toFixed(2)}], [${m[1][0].toFixed(2)}, ${m[1][1].toFixed(2)}]]`, 40, H - 40, '#dbe4f3', 15, 'left', false, true); } },
-      { cap: '整个网格跟着被变形——矩阵不是一张数字表，它是一次空间变换', dur: 4.5,
-        draw(ctx) { const m = Mt(1); grid(ctx, m); basis(ctx, m);
-          text(ctx, '变形后的空间', 40, 48, '#8b96ad', 14); } },
-      { cap: '点 (3, 2) 的新位置 = 3·î新 + 2·ĵ新 = (8, −1) —— 这就是矩阵乘法的几何含义', dur: 7,
-        draw(ctx, p) { const m = Mt(1); grid(ctx, m); basis(ctx, m);
-          const [ix, iy] = apply(m, 1, 0), [jx, jy] = apply(m, 0, 1);
-          const ox = cx + 3 * sc, oy = cy - 2 * sc;
-          const nx = cx + 8 * sc, ny = cy + 1 * sc;
-          const t = ease(p);
-          ctx.setLineDash([6, 6]); ctx.strokeStyle = 'rgba(255,184,107,0.65)'; ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.moveTo(cx + ix * sc * 3, cy - iy * sc * 3);
-          ctx.lineTo(nx, ny); ctx.lineTo(cx + jx * sc * 2, cy - jy * sc * 2);
-          ctx.stroke(); ctx.setLineDash([]);
-          ctx.globalAlpha = 0.3; ctx.fillStyle = '#ffb86b';
-          ctx.beginPath(); ctx.arc(ox, oy, 8, 0, TAU); ctx.fill(); ctx.globalAlpha = 1;
-          ctx.fillStyle = '#ffb86b'; ctx.beginPath(); ctx.arc(ox + (nx - ox) * t, oy + (ny - oy) * t, 9, 0, TAU); ctx.fill();
-          text(ctx, '(3, 2)', ox + 12, oy - 10, 'rgba(255,184,107,0.8)', 13);
-          text(ctx, '(8, −1)', nx - 14, ny - 12, '#ffb86b', 16, 'right', true); } },
-    ] };
-  }
-
-  // ================= A2 · 梯度下降（900×470） =================
-  function gradientScenes() {
-    const W = 900, H = 470;
-    const f = w => 0.35 * w * w + 0.8, df = w => 0.7 * w;
-    const cx = 450, sx = 150, oy = 400, sy = 110;
-    const X = w => cx + w * sx, Y = w => oy - f(w) * sy;
-    const clampW = w => Math.max(-2.7, Math.min(2.7, w));
-
-    function curve(ctx) {
-      ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 2.4; ctx.beginPath();
-      for (let w = -2.6; w <= 2.6; w += 0.04) { const x = X(w), y = Y(w); w === -2.6 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
-      ctx.stroke();
-      text(ctx, '损失 L(w)', 60, 52, 'rgba(255,255,255,0.4)', 13, 'left', false, true);
-      text(ctx, '参数 w →', W - 150, oy + 34, 'rgba(255,255,255,0.4)', 13, 'left', false, true);
-      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-      ctx.beginPath(); ctx.moveTo(60, oy); ctx.lineTo(60 + 4.4 * sx, oy); ctx.stroke();
+    function shapeText(ctx, s, x, y, color, hi) {
+      text(ctx, s, x, y, color, 22, 'left', true, true);
     }
-    function ball(ctx, w, color = '#ffb86b', r = 9) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(X(w), Y(w), r, 0, TAU); ctx.fill(); }
-    function steps(lr, w0, n) { const arr = [w0]; for (let i = 0; i < n; i++) arr.push(arr[arr.length - 1] - lr * df(arr[arr.length - 1])); return arr; }
-
-    function hopScene(lr, cap) {
-      const seq = steps(lr, -2.2, 10).map(clampW);
-      return { cap, dur: 10,
-        draw(ctx, p) { curve(ctx);
-          const pos = p * (seq.length - 1), i = Math.min(seq.length - 2, Math.floor(pos)), frac = ease(pos - i);
-          const w = seq[i] + (seq[i + 1] - seq[i]) * frac;
-          ctx.strokeStyle = 'rgba(94,234,212,0.55)'; ctx.setLineDash([5, 5]); ctx.lineWidth = 1.6; ctx.beginPath();
-          seq.forEach((ww, k) => { const x = X(ww), y = Y(ww); k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke(); ctx.setLineDash([]);
-          ball(ctx, w);
-          const slope = df(w);
-          text(ctx, `w = ${w.toFixed(2)}　斜率 = ${slope.toFixed(2)}　更新：w ← w − ${lr} × 斜率`, 60, 46, '#dbe4f3', 13.5, 'left', false, true); } };
+    // 右侧对齐演算区
+    function alignBlock(ctx, line1, line2, hiIdx2, ok, p) {
+      const bx = 640, by = 130;
+      text(ctx, '第一步：右对齐，短的左边补 1', bx, by - 30, '#8b96ad', 14);
+      text(ctx, line1, bx + 60, by + 12, '#dbe4f3', 26, 'left', true, true);
+      text(ctx, line2, bx + 60, by + 52, '#ffb86b', 26, 'left', true, true);
+      if (hiIdx2 >= 0 && p > 0.4) {
+        ctx.strokeStyle = '#ffb86b'; ctx.lineWidth = 2;
+        ctx.strokeRect(bx + 52, by + 28, 36, 34);
+        text(ctx, '↑ 补 1', bx + 100, by + 52, '#ffb86b', 13);
+      }
     }
-
-    return { w: W, h: H, scenes: [
-      { cap: '这条山谷就是损失函数：横轴 = 参数 w，纵轴 = 损失（模型有多差）。训练 = 走到谷底。', dur: 5.5,
-        draw(ctx, p) { curve(ctx); ball(ctx, -2.2 + (2.5 - 2.2) * p);
-          text(ctx, '谷底 = 最优参数', cx - 52, oy - 30, '#8b96ad', 13); } },
-      { cap: '导数 = 脚下的坡度（往哪边更陡）。梯度下降一句话：w ← w − lr × 斜率', dur: 6.5,
-        draw(ctx, p) { curve(ctx); const w = -1.6; ball(ctx, w);
-          const s = df(w), x1 = X(w), y1 = Y(w), t = ease(p);
-          arrow(ctx, x1, y1, x1 + (70 - t * 25), y1 - (70 - t * 25) * s * 0.35, '#fb923c', 2.6);
-          text(ctx, `坡度（切线）= ${s.toFixed(2)}`, x1 + 20, y1 - 34, '#fb923c', 13.5); } },
-      hopScene(0.5, 'lr = 0.5：每一步踩着"下坡最陡的方向"，步子越靠近谷底越小——稳稳收敛'),
-      hopScene(3.1, 'lr = 3.1：步子太大，直接被甩过谷底，来回弹、越弹越远——发散。学习率的故事全在这条曲线里。'),
-    ] };
-  }
-
-  // ================= A3 · 链式法则（900×470） =================
-  function chainScenes() {
-    const W = 900, H = 470;
-    const nodes = [
-      { x: 110, val: 3, label: 'x' },
-      { x: 320, val: 6, label: 'a = 2x', local: '×2' },
-      { x: 530, val: 7, label: 'b = a+1', local: '+1' },
-      { x: 740, val: 49, label: 'L = b²', local: '平方' },
-    ];
-    const state = { showGrad: -1, g: [null, null, null, 1] };
-
-    function draw(ctx, upto) {
-      ctx.fillStyle = '#0d1322'; ctx.fillRect(0, 0, W, H);
-      nodes.forEach((nd, i) => {
-        box(ctx, nd.x - 62, 140, 124, 92, 'rgba(255,255,255,0.06)', 'rgba(255,255,255,0.2)');
-        text(ctx, nd.label, nd.x, 168, '#8b96ad', 14, 'center');
-        text(ctx, String(nd.val), nd.x, 205, '#dbe4f3', 24, 'center', true, true);
-        if (i < nodes.length - 1) arrow(ctx, nd.x + 64, 186, nodes[i + 1].x - 64, 186, 'rgba(255,255,255,0.3)', 2);
+    function checks(ctx, pairs, p, failIdx) {
+      const bx = 640, by = 250;
+      text(ctx, '第二步：逐位检查', bx, by - 18, '#8b96ad', 14);
+      pairs.forEach(([a, b], i) => {
+        const x = bx + i * 105;
+        const fail = failIdx === i;
+        const col = fail ? '#ff8080' : (b === 1 || a === b ? '#5eead4' : '#ffb86b');
+        box(ctx, x, by, 88, 74, fail ? 'rgba(255,128,128,0.12)' : 'rgba(94,234,212,0.07)',
+          fail ? 'rgba(255,128,128,0.6)' : 'rgba(94,234,212,0.35)', 10);
+        text(ctx, `${a} vs ${b}`, x + 44, by + 30, '#dbe4f3', 16, 'center', true, true);
+        text(ctx, fail ? '✗' : (a === b ? '相等 ✓' : `拉伸 ✓`), x + 44, by + 56, col, 13, 'center');
       });
-      if (upto >= 0) {
-        for (let i = 3; i >= upto; i--) {
-          if (state.g[i] !== null && state.g[i] !== undefined) {
-            text(ctx, `dL/d· = ${state.g[i]}`, nodes[i].x, 285, '#5eead4', 16, 'center', true);
-          }
-        }
-      }
     }
-    const pulse = (ctx, x1, x2, p) => {
-      const x = x1 + (x2 - x1) * ease(p);
-      ctx.fillStyle = '#ffb86b'; ctx.beginPath(); ctx.arc(x, 186, 8, 0, TAU); ctx.fill();
-    };
 
     return { w: W, h: H, scenes: [
-      { cap: '前向传播：从 x=3 出发，×2 得 6，+1 得 7，平方得 49。数值从左流向右。', dur: 5.5,
-        draw(ctx, p) { draw(ctx, -2); pulse(ctx, nodes[0].x, nodes[3].x, p); } },
-      { cap: '反向开始：站在 L 处，dL/dL = 1。目标是走到最左边，算出 dL/dx。', dur: 5,
-        draw(ctx, p) { draw(ctx, 3); const t = ease(p); ctx.fillStyle = '#ffb86b'; ctx.beginPath(); ctx.arc(nodes[3].x, 285, 7 + t * 5, 0, TAU); ctx.fill(); } },
-      { cap: '「平方」站的局部斜率 = 2b = 14 → 1 × 14 = 14 = dL/db；「+1」站斜率是 1 → 14 原样传给 a。', dur: 8,
-        draw(ctx, p) { draw(ctx, 2); pulse(ctx, nodes[3].x, nodes[1].x + 62, p); } },
-      { cap: '「×2」站的局部斜率是 2：dL/dx = dL/da × 2 = 14 × 2 = 28。链式法则 = 沿途局部斜率的连乘。', dur: 8,
-        draw(ctx, p) { state.g[2] = 14; state.g[1] = 14; state.g[0] = 28;
-          draw(ctx, 0);
-          const t = ease(p); pulse(ctx, nodes[1].x, nodes[0].x, t); } },
+      { cap: '任务：(3, 4) 的表格，加上 (4,) 的一行数。一个表格怎么加一行？', dur: 5,
+        draw(ctx, p) {
+          text(ctx, 'a，形状 (3, 4)', ax, ay - 14, '#8b96ad', 14);
+          grid(ctx, A);
+          text(ctx, 'b，形状 (4,)', ax, 464, '#8b96ad', 14);
+          rowCells(ctx, B, 478, Math.min(1, p * 2));
+        } },
+      { cap: '第一步（右对齐）：把 (4,) 补成 (1, 4)——短的那串，在左边补一个 1', dur: 5.5,
+        draw(ctx, p) {
+          text(ctx, 'a，形状 (3, 4)', ax, ay - 14, '#8b96ad', 14);
+          grid(ctx, A);
+          text(ctx, 'b，形状 (4,)', ax, 464, '#8b96ad', 14);
+          rowCells(ctx, B, 478);
+          alignBlock(ctx, '(3, 4)', '(1, 4)', 0, true, ease(p));
+        } },
+      { cap: '第二步（逐位检查 + 拉伸）：4 vs 4 相等；3 vs 1 → b 被"逻辑复制"成 3 行——内存里仍只有一份', dur: 7,
+        draw(ctx, p) {
+          text(ctx, 'a，形状 (3, 4)', ax, ay - 14, '#8b96ad', 14);
+          grid(ctx, A);
+          // 幽灵行：b 逻辑复制到第 1、2 行
+          rowCells(ctx, B, ay + chh, 0.55 + 0.35 * Math.min(1, p * 1.5), true);
+          rowCells(ctx, B, ay + 2 * chh, 0.55 + 0.35 * Math.min(1, p * 1.5), true);
+          text(ctx, 'b，形状 (4,)', ax, 464, '#8b96ad', 14);
+          rowCells(ctx, B, 478);
+          arrow(ctx, ax + 3 * cw - 40, 470, ax + 3 * cw - 40, ay + 2 * chh + 6, 'rgba(251,146,60,0.7)', 2);
+          text(ctx, '逻辑复制（不占内存）', ax + 3 * cw - 10, 400, 'rgba(251,146,60,0.9)', 12.5);
+          checks(ctx, [[4, 4], [3, 1]], p, -1);
+        } },
+      { cap: '相加：结果的每个格子 = a 的格子 + 对应的 b 值，结果形状 (3, 4) ✓', dur: 6,
+        draw(ctx, p) {
+          grid(ctx, A);
+          rowCells(ctx, B, 478);
+          const shown = Math.ceil(p * 12);
+          for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) {
+            const idx = i * 4 + j;
+            if (idx >= shown) continue;
+            const x = ax + j * cw, y = ay + i * chh;
+            box(ctx, x, y, cw - 8, chh - 8, 'rgba(94,234,212,0.18)', 'rgba(94,234,212,0.55)', 9);
+            text(ctx, String(A[i][j] + B[j]), x + (cw - 8) / 2, y + (chh - 8) / 2 + 6, '#5eead4', 17, 'center', true, true);
+          }
+        } },
+      { cap: '失败案例：(3, 4) + (3,)——末位 4 vs 3，不相等也没有 1 → RuntimeError。一步流程走到哪、断在哪，清清楚楚。', dur: 7,
+        draw(ctx, p) {
+          text(ctx, 'a，形状 (3, 4)', ax, ay - 14, '#8b96ad', 14);
+          grid(ctx, A);
+          text(ctx, 'b，形状 (3,)', ax, 464, '#8b96ad', 14);
+          rowCells(ctx, B3, 478);
+          alignBlock(ctx, '(3, 4)', '(1, 3)', 0, true, 1);
+          checks(ctx, [[4, 3]], 1, 0);
+          if (p > 0.45) {
+            box(ctx, 640, 360, 300, 60, 'rgba(255,128,128,0.12)', 'rgba(255,128,128,0.6)', 10);
+            text(ctx, 'RuntimeError：dimension 1', 660, 398, '#ff8080', 16, 'left', true, true);
+          }
+        } },
     ] };
   }
 
-  // ================= A4 · 神经网络信号流（900×470） =================
+  // ================= c05 · 梯度下降拟合真实数据（980×560） =================
+  function linregScenes() {
+    const W = 980, H = 560;
+    const px0 = 90, px1 = 590, py0 = 80, py1 = 470;
+    const noise = [0.06, -0.05, 0.08, -0.03, 0.05, 0.02, -0.06, 0.04, 0.03];
+    const pts = Array.from({ length: 9 }, (_, i) => {
+      const x = 0.08 + i * 0.1;
+      return { x, y: 0.9 * x + 0.15 + noise[i] };
+    });
+    const X = x => px0 + x * (px1 - px0);
+    const Y = y => py1 - y * (py1 - py0) / 10;
+
+    function traj(lr, steps) {
+      let w = -2, b = 4;
+      const seq = [{ w, b }];
+      for (let s = 0; s < steps; s++) {
+        let dw = 0, db = 0;
+        for (const p of pts) { const e = w * p.x + b - p.y; dw += 2 * e * p.x / pts.length; db += 2 * e / pts.length; }
+        w -= lr * dw; b -= lr * db;
+        seq.push({ w, b });
+      }
+      return seq;
+    }
+    const fitSeq = traj(0.6, 160);
+    const badSeq = traj(5.2, 160);
+    const mse = (w, b) => pts.reduce((s, p) => s + (w * p.x + b - p.y) ** 2, 0) / pts.length;
+
+    function plot(ctx, w, b, showResid) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.strokeRect(px0, py0, px1 - px0, py1 - py0);
+      pts.forEach(p => {
+        ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), 5, 0, TAU); ctx.fill();
+        if (showResid) {
+          ctx.strokeStyle = 'rgba(255,128,128,0.55)'; ctx.setLineDash([4, 4]);
+          ctx.beginPath(); ctx.moveTo(X(p.x), Y(p.y)); ctx.lineTo(X(p.x), Y(w * p.x + b)); ctx.stroke();
+          ctx.setLineDash([]);
+        }
+      });
+      ctx.strokeStyle = '#5eead4'; ctx.lineWidth = 2.6; ctx.beginPath();
+      ctx.moveTo(X(0), Y(b)); ctx.lineTo(X(1), Y(w + b)); ctx.stroke(); ctx.lineWidth = 1;
+      text(ctx, `y = ${w.toFixed(2)}·x + ${b.toFixed(2)}`, px0 + 10, py0 + 24, '#5eead4', 14, 'left', false, true);
+    }
+
+    function panel(ctx, w, b, lr) {
+      const loss = mse(w, b);
+      text(ctx, `损失（MSE）= ${loss.toFixed(3)}`, 650, 100, '#ffb86b', 16, 'left', true, true);
+      text(ctx, `更新公式：`, 650, 150, '#8b96ad', 13.5);
+      text(ctx, `w ← w − lr·∂L/∂w`, 650, 178, '#dbe4f3', 14, 'left', false, false, true);
+      text(ctx, `b ← b − lr·∂L/∂b`, 650, 204, '#dbe4f3', 14, 'left', false, false, true);
+      text(ctx, `lr = ${lr}`, 650, 250, '#5eead4', 15, 'left', true);
+      text(ctx, '（∂L/∂w 与 ∂L/∂b 由 c03 的', 650, 300, '#8b96ad', 12.5);
+      text(ctx, '反向传播自动算出——同一条链）', 650, 320, '#8b96ad', 12.5);
+    }
+
+    return { w: W, h: H, scenes: [
+      { cap: '9 个数据点散在平面上；模型是一条线 y = w·x + b。初始 w = −2、b = 4——歪得离谱。', dur: 5.5,
+        draw(ctx, p) { plot(ctx, -2, 4, false); panel(ctx, -2, 4, 0.6);
+          ctx.globalAlpha = Math.min(1, p * 2); pts.forEach(pt => { ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(X(pt.x), Y(pt.y), 5, 0, TAU); ctx.fill(); }); ctx.globalAlpha = 1; } },
+      { cap: '损失 = 每个点到线的竖直距离的平方平均（红色虚线段）。现在的 MSE 算给你看。', dur: 6,
+        draw(ctx, p) { plot(ctx, -2, 4, true); panel(ctx, -2, 4, 0.6);
+          text(ctx, `每根红线 = 一个点的"误差"`, px0 + 10, py1 - 16, 'rgba(255,128,128,0.8)', 13); } },
+      { cap: '一步更新：梯度（由 c03 的反向传播算出）告诉 w 和 b 各往哪边微调——线朝数据挪了一点。', dur: 7,
+        draw(ctx, p) {
+          const w0 = -2, b0 = 4, seq = traj(0.6, 2);
+          const w = w0 + (seq[1].w - w0) * ease(p), b = b0 + (seq[1].b - b0) * ease(p);
+          plot(ctx, w, b, true); panel(ctx, w, b, 0.6);
+        } },
+      { cap: '连续 160 步：线自己"找到"了数据的规律，损失一路下滑。这就是训练的全部——只是重复。', dur: 9,
+        draw(ctx, p) { const st = fitSeq[Math.min(fitSeq.length - 1, Math.floor(p * (fitSeq.length - 1)))];
+          plot(ctx, st.w, st.b, false); panel(ctx, st.w, st.b, 0.6); } },
+      { cap: 'lr = 5.2：步子太大，线来回甩、越甩越偏——发散。学习率的教训，一遍就记住。', dur: 9,
+        draw(ctx, p) { const st = badSeq[Math.min(badSeq.length - 1, Math.floor(p * (badSeq.length - 1)))];
+          plot(ctx, Math.max(-30, Math.min(30, st.w)), Math.max(-20, Math.min(40, st.b)), false);
+          panel(ctx, Math.max(-30, Math.min(30, st.w)), Math.max(-20, Math.min(40, st.b)), 5.2); } },
+    ] };
+  }
+
+  // ================= c07 · 菱形依赖的梯度汇合（980×560） =================
+  function chainDiamondScenes() {
+    const W = 980, H = 560;
+    const N = {
+      a: { x: 140, y: 130, name: 'a', val: 2 },
+      b: { x: 140, y: 450, name: 'b', val: -1 },
+      c: { x: 460, y: 450, name: 'c', val: 0.5 },
+      pab: { x: 400, y: 140, name: 'a·b', val: -2 },
+      pac: { x: 400, y: 295, name: 'a·c', val: 1 },
+      pbc: { x: 400, y: 450, name: 'b·c', val: -0.5 },
+      s: { x: 660, y: 215, name: 'a·b+a·c', val: -1 },
+      L: { x: 850, y: 295, name: 'L', val: -1.5 },
+    };
+    const EDGES = [['a', 'pab'], ['b', 'pab'], ['a', 'pac'], ['c', 'pac'], ['b', 'pbc'], ['c', 'pbc'], ['pab', 's'], ['pac', 's'], ['s', 'L'], ['pbc', 'L']];
+    // 梯度（随场景揭示）：L=1；s=1；pbc=1；pab=1；pac=1；a=-0.5；b=2.5；c=1
+    const G = { L: 1, s: 1, pbc: 1, pab: 1, pac: 1, a: -0.5, b: 2.5, c: 1 };
+
+    function draw(ctx, revealVals = 8, revealGrad = null, hot = null, pulseEdge = null, pt = 0) {
+      ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H);
+      EDGES.forEach(([f, t], i) => {
+        const A = N[f], B = N[t];
+        const active = pulseEdge && pulseEdge[0] === f && pulseEdge[1] === t;
+        ctx.strokeStyle = active ? '#ffb86b' : 'rgba(255,255,255,0.18)';
+        ctx.lineWidth = active ? 2.5 : 1.4;
+        ctx.beginPath(); ctx.moveTo(A.x + 36, A.y); ctx.lineTo(B.x - 38, B.y); ctx.stroke();
+        if (active) { const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2 - 10; ctx.fillStyle = '#ffb86b'; ctx.beginPath(); ctx.arc(mx, my, 6 + Math.sin(pt * TAU * 2) * 2, 0, TAU); ctx.fill(); }
+      });
+      Object.entries(N).forEach(([k, nd]) => {
+        const revealIdx = ['a', 'b', 'c', 'pab', 'pac', 'pbc', 's', 'L'].indexOf(k);
+        const shown = revealVals >= 0 ? revealIdx <= revealVals : true;
+        const isLeaf = ['a', 'b', 'c'].includes(k);
+        box(ctx, nd.x - 48, nd.y - 36, 96, 72, shown ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.02)', 'rgba(255,255,255,0.2)');
+        if (shown) {
+          text(ctx, nd.name, nd.x, nd.y - 8, isLeaf ? '#ffb86b' : '#8b96ad', 13, 'center', true);
+          text(ctx, String(nd.val), nd.x, nd.y + 20, '#dbe4f3', 18, 'center', true, true);
+        }
+        if (revealGrad !== null && revealGrad.includes(k)) {
+          text(ctx, `dL/d${k === 'L' ? 'L' : k} = ${G[k]}`, nd.x, nd.y - 48, '#5eead4', 14, 'center', true);
+        }
+      });
+    }
+
+    return { w: W, h: H, scenes: [
+      { cap: '章节的原例：f = a·b + a·c + b·c（a=2, b=−1, c=0.5）。先看前向：数值从叶子流向 L。', dur: 6.5,
+        draw(ctx, p) { const reveal = Math.min(7, Math.floor(ease(p) * 8)); draw(ctx, reveal); } },
+      { cap: '反向开始：站在 L 处，dL/dL = 1。目标：走到三个叶子，算出 dL/da、dL/db、dL/dc。', dur: 5,
+        draw(ctx, p) { draw(ctx, 7, ['L'], null, null, p);
+          const t = ease(p); ctx.fillStyle = '#ffb86b'; ctx.beginPath(); ctx.arc(N.L.x, N.L.y - 52, 6 + t * 4, 0, TAU); ctx.fill(); } },
+      { cap: '加法节点：把梯度【原样分发】给两个输入——s 和 b·c 各拿到 1。加法的局部斜率恒为 1。', dur: 7,
+        draw(ctx, p) { draw(ctx, 7, ['L', 's', 'pbc'], null, ['L', 'pbc'] ? ['s', 'L'] : null, p);
+          pulse(ctx, 0, 0, 0);
+          // 双脉冲：L→s 与 L→p_bc
+          const t = ease(p);
+          ctx.fillStyle = '#ffb86b';
+          ctx.beginPath(); ctx.arc(N.s.x + (N.L.x - N.s.x) * (1 - t), N.s.y + (N.L.y - N.s.y) * (1 - t), 7, 0, TAU); ctx.fill();
+          ctx.beginPath(); ctx.arc(N.pbc.x + (N.L.x - N.pbc.x) * (1 - t), N.pbc.y + (N.L.y - N.pbc.y) * (1 - t), 7, 0, TAU); ctx.fill(); } },
+      { cap: '乘法节点：局部斜率 =【对方因子】。p·a·c 这条：1 传给 a 时带上 c=0.5，传给 c 时带上 a=2。', dur: 8,
+        draw(ctx, p) { draw(ctx, 7, ['L', 's', 'pbc', 'pac'], ['pac', 's'], p);
+          text(ctx, '乘法法则：∂(uv)/∂u = v，∂(uv)/∂v = u', 210, 530, '#8b96ad', 14); } },
+      { cap: '三条路都到叶子了——现在到了关键一刻：a 收到两条路的贡献，必须【相加】。', dur: 7,
+        draw(ctx, p) { draw(ctx, 7, ['L', 's', 'pbc', 'pac', 'pab'], ['pab', 'pac'], p); } },
+      { cap: '汇合时刻：dL/da = (−1) + (0.5) = −0.5；dL/db = 2 + 0.5 = 2.5；dL/dc = 2 − 1 = 1。+= 写的不是习惯，是求导法则本身。', dur: 9,
+        draw(ctx, p) { draw(ctx, 7, ['a', 'b', 'c', 'L', 's', 'pbc', 'pac', 'pab'], null, null, p); } },
+    ] };
+  }
+
+  // ================= c08 · 神经网络信号流（900×470） =================
   function netflowScenes() {
     const W = 900, H = 470;
     const layers = [3, 4, 2];
@@ -233,13 +337,14 @@ export const Anim = (function () {
     ] };
   }
 
-  const ANIMS = { matrix: matrixScenes, gradient: gradientScenes, chain: chainScenes, netflow: netflowScenes };
-  const TITLES = { matrix: '矩阵 = 空间的变换', gradient: '梯度下降 = 下山寻谷', chain: '链式法则 = 敏感度回传', netflow: '神经网络 = 信号的旅程' };
+  const ANIMS = { broadcast: broadcastScenes, linreg: linregScenes, chaindiamond: chainDiamondScenes, netflow: netflowScenes };
+  const TITLES = { broadcast: '广播：两步流程的动画', linreg: '梯度下降：线自己找到数据', chaindiamond: '反向传播：菱形依赖的梯度汇合', netflow: '神经网络 = 信号的旅程' };
 
   function mount(container, animId) {
-    const def = ANIMS[animId] || ANIMS.matrix;
-    const scenes = def().scenes;
-    const DW = def().w || 640, DH = def().h || 380;
+    const def = ANIMS[animId] || ANIMS.broadcast;
+    const built = def();
+    const scenes = built.scenes;
+    const DW = built.w, DH = built.h;
     container.innerHTML = `
       <div class="ts-wrap an-wrap">
         <div style="flex:1; min-width:0">
@@ -260,7 +365,7 @@ export const Anim = (function () {
       </div>`;
     const $ = s => container.querySelector(s);
     const canvas = $('.an-canvas'), capEl = $('.an-caption'), dots = $('.an-dots');
-    canvas.width = DW * 2; canvas.height = DH * 2;           // 2× 分辨率防拉伸模糊
+    canvas.width = DW * 2; canvas.height = DH * 2;
     canvas.style.aspectRatio = `${DW} / ${DH}`;
     const ctx = canvas.getContext('2d');
     let scene = 0, p = 0, playing = false, raf = null, last = 0;
@@ -276,7 +381,7 @@ export const Anim = (function () {
       const s = scenes[scene];
       ctx.setTransform(2, 0, 0, 2, 0, 0);
       ctx.clearRect(0, 0, DW, DH);
-      ctx.fillStyle = '#0d1322';
+      ctx.fillStyle = BG;
       ctx.fillRect(0, 0, DW, DH);
       s.draw(ctx, p);
       capEl.innerHTML = s.cap;
