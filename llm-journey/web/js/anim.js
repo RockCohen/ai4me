@@ -20,11 +20,31 @@ export const Anim = (function () {
     ctx.lineTo(x2 - L * Math.cos(a + 0.42), y2 - L * Math.sin(a + 0.42));
     ctx.closePath(); ctx.fill();
   }
-  function text(ctx, s, x, y, color, size, align, bold, mono) {
+  function rawText(ctx, s, x, y, color, size, align, bold, mono) {
     ctx.fillStyle = color;
     ctx.font = `${bold ? 'bold ' : ''}${size}px ${mono ? 'ui-monospace,monospace' : '-apple-system,"PingFang SC",sans-serif'}`;
     ctx.textAlign = align || 'left';
     ctx.fillText(s, x, y);
+    ctx.textAlign = 'left';
+  }
+  // 布局第一性原理：文字位置必须被计算而非手工摆放。
+  // T() 登记 每次 绘制的占位矩形；与已放置元素碰撞时自动下移避让，
+  // 使"文字叠文字"在结构上不可能发生。_placed 每帧清空（帧 = 状态的纯函数）。
+  let _placed = [];
+  function resetPlaced() { _placed = []; }
+  function T(ctx, s, x, y, color, size, align, bold, mono) {
+    ctx.font = `${bold ? 'bold ' : ''}${size}px ${mono ? 'ui-monospace,monospace' : '-apple-system,"PingFang SC",sans-serif'}`;
+    const w = ctx.measureText(s).width, h = size * 1.3;
+    let rect = { x: align === 'center' ? x - w / 2 : (align === 'right' ? x - w : x), y: y - size, w, h };
+    let tries = 0;
+    while (tries < 6 && _placed.some(r =>
+      rect.x < r.x + r.w && rect.x + rect.w > r.x && rect.y < r.y + r.h && rect.y + rect.h > r.y)) {
+      rect.y += h * 0.9; tries++;
+    }
+    _placed.push(rect);
+    ctx.fillStyle = color;
+    ctx.textAlign = 'left';
+    ctx.fillText(s, rect.x, rect.y + size);
     ctx.textAlign = 'left';
   }
   function box(ctx, x, y, w, h, fill, stroke, r = 12) {
@@ -47,7 +67,7 @@ export const Anim = (function () {
         for (let j = 0; j < vals[i].length; j++) {
           const x = ax + j * cw, y = ay + i * chh;
           box(ctx, x, y, cw - 8, chh - 8, 'rgba(96,165,250,0.13)', 'rgba(96,165,250,0.4)', 9);
-          text(ctx, String(vals[i][j]), x + (cw - 8) / 2, y + (chh - 8) / 2 + 6, '#e6f0ff', 17, 'center', true, true);
+          rawText(ctx, String(vals[i][j]), x + (cw - 8) / 2, y + (chh - 8) / 2 + 6, '#e6f0ff', 17, 'center', true, true);
         }
       }
       ctx.globalAlpha = 1;
@@ -66,68 +86,68 @@ export const Anim = (function () {
         box(ctx, x, y, cw - 8, chh - 8, ghost ? 'rgba(251,146,60,0.22)' : 'rgba(251,146,60,0.16)',
           ghost ? 'rgba(251,146,60,0.85)' : 'rgba(251,146,60,0.75)', 9);
         ctx.setLineDash([]);
-        text(ctx, String(vals[j]), x + (cw - 8) / 2, y + (chh - 8) / 2 + 6, '#ffd9a8', 17, 'center', true, true);
+        rawText(ctx, String(vals[j]), x + (cw - 8) / 2, y + (chh - 8) / 2 + 6, '#ffd9a8', 17, 'center', true, true);
       }
       ctx.globalAlpha = 1;
     }
     function shapeText(ctx, s, x, y, color, hi) {
-      text(ctx, s, x, y, color, 22, 'left', true, true);
+      T(ctx, s, x, y, color, 22, 'left', true, true);
     }
     // 右侧对齐演算区
     function alignBlock(ctx, line1, line2, hiIdx2, ok, p) {
       const bx = 640, by = 150;
-      text(ctx, '第一步：右对齐，短的左边补 1', bx, by - 34, '#8b96ad', 14);
-      text(ctx, line1, bx + 60, by + 12, '#dbe4f3', 26, 'left', true, true);
-      text(ctx, line2, bx + 60, by + 58, '#ffb86b', 26, 'left', true, true);
+      T(ctx, '第一步：右对齐，短的左边补 1', bx, by - 34, '#8b96ad', 14);
+      T(ctx, line1, bx + 60, by + 12, '#dbe4f3', 26, 'left', true, true);
+      T(ctx, line2, bx + 60, by + 58, '#ffb86b', 26, 'left', true, true);
       if (hiIdx2 >= 0 && p > 0.4) {
         // 高亮 line2 开头补出来的 "1"
         ctx.strokeStyle = '#ffb86b'; ctx.lineWidth = 2;
         ctx.strokeRect(bx + 52, by + 32, 42, 42);
-        text(ctx, '← 补出来的 1', bx + 190, by + 58, '#ffb86b', 13.5);
+        T(ctx, '← 补出来的 1', bx + 190, by + 58, '#ffb86b', 13.5);
       }
     }
     function checks(ctx, pairs, p, failIdx) {
       const bx = 640, by = 250;
-      text(ctx, '第二步：逐位检查', bx, by - 18, '#8b96ad', 14);
+      T(ctx, '第二步：逐位检查', bx, by - 18, '#8b96ad', 14);
       pairs.forEach(([a, b], i) => {
         const x = bx + i * 105;
         const fail = failIdx === i;
         const col = fail ? '#ff8080' : (b === 1 || a === b ? '#5eead4' : '#ffb86b');
         box(ctx, x, by, 88, 74, fail ? 'rgba(255,128,128,0.12)' : 'rgba(94,234,212,0.07)',
           fail ? 'rgba(255,128,128,0.6)' : 'rgba(94,234,212,0.35)', 10);
-        text(ctx, `${a} vs ${b}`, x + 44, by + 30, '#dbe4f3', 16, 'center', true, true);
-        text(ctx, fail ? '✗' : (a === b ? '相等 ✓' : `拉伸 ✓`), x + 44, by + 56, col, 13, 'center');
+        T(ctx, `${a} vs ${b}`, x + 44, by + 30, '#dbe4f3', 16, 'center', true, true);
+        T(ctx, fail ? '✗' : (a === b ? '相等 ✓' : `拉伸 ✓`), x + 44, by + 56, col, 13, 'center');
       });
     }
 
     return { w: W, h: H, scenes: [
       { cap: '任务：(3, 4) 的表格，加上 (4,) 的一行数。一个表格怎么加一行？', dur: 5,
         draw(ctx, p) {
-          text(ctx, 'a，形状 (3, 4)', ax, ay - 14, '#8b96ad', 14);
+          T(ctx, 'a，形状 (3, 4)', ax, ay - 14, '#8b96ad', 14);
           grid(ctx, A);
-          text(ctx, 'b，形状 (4,)', ax, 464, '#8b96ad', 14);
+          T(ctx, 'b，形状 (4,)', ax, 464, '#8b96ad', 14);
           rowCells(ctx, B, 478, Math.min(1, p * 2));
         } },
       { cap: '第一步（右对齐）：把 (4,) 补成 (1, 4)——短的那串，在左边补一个 1', dur: 5.5,
         draw(ctx, p) {
-          text(ctx, 'a，形状 (3, 4)', ax, ay - 14, '#8b96ad', 14);
+          T(ctx, 'a，形状 (3, 4)', ax, ay - 14, '#8b96ad', 14);
           grid(ctx, A);
-          text(ctx, 'b，形状 (4,)', ax, 464, '#8b96ad', 14);
+          T(ctx, 'b，形状 (4,)', ax, 464, '#8b96ad', 14);
           rowCells(ctx, B, 478);
           alignBlock(ctx, '(3, 4)', '(1, 4)', 0, true, ease(p));
         } },
       { cap: '第二步（逐位检查 + 拉伸）：4 vs 4 相等；3 vs 1 → b 被"逻辑复制"成 3 行——内存里仍只有一份', dur: 7,
         draw(ctx, p) {
-          text(ctx, 'a，形状 (3, 4)', ax, ay - 14, '#8b96ad', 14);
+          T(ctx, 'a，形状 (3, 4)', ax, ay - 14, '#8b96ad', 14);
           grid(ctx, A);
           const fade = 0.55 + 0.35 * Math.min(1, p * 1.5);
           // 幽灵行：先用底色盖住原值，再画 b 的值（不出现文字叠文字）
           rowCells(ctx, B, ay + chh, fade, true, true);
           rowCells(ctx, B, ay + 2 * chh, fade, true, true);
-          text(ctx, 'b，形状 (4,)', ax, 464, '#8b96ad', 14);
+          T(ctx, 'b，形状 (4,)', ax, 464, '#8b96ad', 14);
           rowCells(ctx, B, 478);
           arrow(ctx, ax + 3 * cw - 40, 470, ax + 3 * cw - 40, ay + 2 * chh + 6, 'rgba(251,146,60,0.7)', 2);
-          text(ctx, '逻辑复制（不占内存）', ax + 3 * cw + 4, 402, 'rgba(251,146,60,0.9)', 12.5);
+          T(ctx, '逻辑复制（不占内存）', ax + 3 * cw + 4, 402, 'rgba(251,146,60,0.9)', 12.5);
           checks(ctx, [[4, 4], [3, 1]], p, -1);
         } },
       { cap: '相加：结果的每个格子 = a 的格子 + 对应的 b 值，结果形状 (3, 4) ✓', dur: 6,
@@ -142,20 +162,20 @@ export const Anim = (function () {
             ctx.fillStyle = '#102430';                       // 不透明底，盖住 a 的旧值
             ctx.fillRect(x, y, cw - 8, chh - 8);
             box(ctx, x, y, cw - 8, chh - 8, 'rgba(94,234,212,0.18)', 'rgba(94,234,212,0.55)', 9);
-            text(ctx, String(A[i][j] + B[j]), x + (cw - 8) / 2, y + (chh - 8) / 2 + 6, '#5eead4', 17, 'center', true, true);
+            T(ctx, String(A[i][j] + B[j]), x + (cw - 8) / 2, y + (chh - 8) / 2 + 6, '#5eead4', 17, 'center', true, true);
           }
         } },
       { cap: '失败案例：(3, 4) + (3,)——末位 4 vs 3，不相等也没有 1 → RuntimeError。一步流程走到哪、断在哪，清清楚楚。', dur: 7,
         draw(ctx, p) {
-          text(ctx, 'a，形状 (3, 4)', ax, ay - 14, '#8b96ad', 14);
+          T(ctx, 'a，形状 (3, 4)', ax, ay - 14, '#8b96ad', 14);
           grid(ctx, A);
-          text(ctx, 'b，形状 (3,)', ax, 464, '#8b96ad', 14);
+          T(ctx, 'b，形状 (3,)', ax, 464, '#8b96ad', 14);
           rowCells(ctx, B3, 478);
           alignBlock(ctx, '(3, 4)', '(1, 3)', 0, true, 1);
           checks(ctx, [[4, 3]], 1, 0);
           if (p > 0.45) {
             box(ctx, 640, 360, 300, 60, 'rgba(255,128,128,0.12)', 'rgba(255,128,128,0.6)', 10);
-            text(ctx, 'RuntimeError：dimension 1', 660, 398, '#ff8080', 16, 'left', true, true);
+            T(ctx, 'RuntimeError：dimension 1', 660, 398, '#ff8080', 16, 'left', true, true);
           }
         } },
     ] };
@@ -201,18 +221,18 @@ export const Anim = (function () {
       });
       ctx.strokeStyle = '#5eead4'; ctx.lineWidth = 2.6; ctx.beginPath();
       ctx.moveTo(X(0), Y(b)); ctx.lineTo(X(1), Y(w + b)); ctx.stroke(); ctx.lineWidth = 1;
-      text(ctx, `y = ${w.toFixed(2)}·x + ${b.toFixed(2)}`, px0 + 10, py0 + 24, '#5eead4', 14, 'left', false, true);
+      T(ctx, `y = ${w.toFixed(2)}·x + ${b.toFixed(2)}`, px0 + 10, py0 + 24, '#5eead4', 14, 'left', false, true);
     }
 
     function panel(ctx, w, b, lr) {
       const loss = mse(w, b);
-      text(ctx, `损失（MSE）= ${loss.toFixed(3)}`, 650, 100, '#ffb86b', 16, 'left', true, true);
-      text(ctx, `更新公式：`, 650, 150, '#8b96ad', 13.5);
-      text(ctx, `w ← w − lr·∂L/∂w`, 650, 178, '#dbe4f3', 14, 'left', false, false, true);
-      text(ctx, `b ← b − lr·∂L/∂b`, 650, 204, '#dbe4f3', 14, 'left', false, false, true);
-      text(ctx, `lr = ${lr}`, 650, 250, '#5eead4', 15, 'left', true);
-      text(ctx, '（∂L/∂w 与 ∂L/∂b 由 c03 的', 650, 300, '#8b96ad', 12.5);
-      text(ctx, '反向传播自动算出——同一条链）', 650, 320, '#8b96ad', 12.5);
+      T(ctx, `损失（MSE）= ${loss.toFixed(3)}`, 650, 100, '#ffb86b', 16, 'left', true, true);
+      T(ctx, `更新公式：`, 650, 150, '#8b96ad', 13.5);
+      T(ctx, `w ← w − lr·∂L/∂w`, 650, 178, '#dbe4f3', 14, 'left', false, false, true);
+      T(ctx, `b ← b − lr·∂L/∂b`, 650, 204, '#dbe4f3', 14, 'left', false, false, true);
+      T(ctx, `lr = ${lr}`, 650, 250, '#5eead4', 15, 'left', true);
+      T(ctx, '（∂L/∂w 与 ∂L/∂b 由 c03 的', 650, 300, '#8b96ad', 12.5);
+      T(ctx, '反向传播自动算出——同一条链）', 650, 320, '#8b96ad', 12.5);
     }
 
     return { w: W, h: H, scenes: [
@@ -221,7 +241,7 @@ export const Anim = (function () {
           ctx.globalAlpha = Math.min(1, p * 2); pts.forEach(pt => { ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(X(pt.x), Y(pt.y), 5, 0, TAU); ctx.fill(); }); ctx.globalAlpha = 1; } },
       { cap: '损失 = 每个点到线的竖直距离的平方平均（红色虚线段）。现在的 MSE 算给你看。', dur: 6,
         draw(ctx, p) { plot(ctx, -2, 4, true); panel(ctx, -2, 4, 0.6);
-          text(ctx, `每根红线 = 一个点的"误差"`, px0 + 10, py1 - 16, 'rgba(255,128,128,0.8)', 13); } },
+          T(ctx, `每根红线 = 一个点的"误差"`, px0 + 10, py1 - 16, 'rgba(255,128,128,0.8)', 13); } },
       { cap: '一步更新：梯度（由 c03 的反向传播算出）告诉 w 和 b 各往哪边微调——线朝数据挪了一点。', dur: 7,
         draw(ctx, p) {
           const w0 = -2, b0 = 4, seq = traj(0.6, 2);
@@ -271,11 +291,11 @@ export const Anim = (function () {
         const isLeaf = ['a', 'b', 'c'].includes(k);
         box(ctx, nd.x - 48, nd.y - 36, 96, 72, shown ? 'rgba(255,255,255,0.07)' : 'rgba(255,255,255,0.02)', 'rgba(255,255,255,0.2)');
         if (shown) {
-          text(ctx, nd.name, nd.x, nd.y - 8, isLeaf ? '#ffb86b' : '#8b96ad', 13, 'center', true);
-          text(ctx, String(nd.val), nd.x, nd.y + 20, '#dbe4f3', 18, 'center', true, true);
+          T(ctx, nd.name, nd.x, nd.y - 8, isLeaf ? '#ffb86b' : '#8b96ad', 13, 'center', true);
+          rawText(ctx, String(nd.val), nd.x, nd.y + 20, '#dbe4f3', 18, 'center', true, true);
         }
         if (revealGrad !== null && revealGrad.includes(k)) {
-          text(ctx, `dL/d${k === 'L' ? 'L' : k} = ${G[k]}`, nd.x, nd.y - 48, '#5eead4', 14, 'center', true);
+          T(ctx, `dL/d${k === 'L' ? 'L' : k} = ${G[k]}`, nd.x, nd.y - 48, '#5eead4', 14, 'center', true);
         }
       });
     }
@@ -296,7 +316,7 @@ export const Anim = (function () {
           ctx.beginPath(); ctx.arc(N.pbc.x + (N.L.x - N.pbc.x) * (1 - t), N.pbc.y + (N.L.y - N.pbc.y) * (1 - t), 7, 0, TAU); ctx.fill(); } },
       { cap: '乘法节点：局部斜率 =【对方因子】。p·a·c 这条：1 传给 a 时带上 c=0.5，传给 c 时带上 a=2。', dur: 8,
         draw(ctx, p) { draw(ctx, 7, ['L', 's', 'pbc', 'pac'], ['pac', 's'], p);
-          text(ctx, '乘法法则：∂(uv)/∂u = v，∂(uv)/∂v = u', 210, 530, '#8b96ad', 14); } },
+          T(ctx, '乘法法则：∂(uv)/∂u = v，∂(uv)/∂v = u', 210, 530, '#8b96ad', 14); } },
       { cap: '三条路都到叶子了——现在到了关键一刻：a 收到两条路的贡献，必须【相加】。', dur: 7,
         draw(ctx, p) { draw(ctx, 7, ['L', 's', 'pbc', 'pac', 'pab'], ['pab', 'pac'], p); } },
       { cap: '汇合时刻：dL/da = (−1) + (0.5) = −0.5；dL/db = 2 + 0.5 = 2.5；dL/dc = 2 − 1 = 1。+= 写的不是习惯，是求导法则本身。', dur: 9,
@@ -329,7 +349,7 @@ export const Anim = (function () {
         ctx.fillStyle = active ? `rgba(96,165,250,${0.4 + 0.35 * Math.abs(act[li][i])})` : 'rgba(255,255,255,0.08)';
         ctx.strokeStyle = active ? '#60a5fa' : 'rgba(255,255,255,0.25)';
         ctx.beginPath(); ctx.arc(n.x, n.y, 19, 0, TAU); ctx.fill(); ctx.stroke();
-        if (active) text(ctx, act[li][i].toFixed(1), n.x, n.y + 4, '#e6f0ff', 12, 'center', false, true);
+        if (active) rawText(ctx, act[li][i].toFixed(1), n.x, n.y + 4, '#e6f0ff', 12, 'center', false, true);
       }));
     }
 
@@ -340,7 +360,7 @@ export const Anim = (function () {
         draw(ctx, p) { net(ctx, 1 + Math.min(1, Math.floor(p * 2))); } },
       { cap: '输出与正确答案的差距 = 损失（橙色）。训练的目标就是让它变小。', dur: 5.5,
         draw(ctx, p) { net(ctx, 2);
-          text(ctx, '损失', 780, 210, '#fb923c', 15, 'left', true);
+          T(ctx, '损失', 780, 210, '#fb923c', 15, 'left', true);
           ctx.fillStyle = '#fb923c'; ctx.beginPath(); ctx.arc(770, 235, 8 + Math.sin(p * TAU * 2) * 2.5, 0, TAU); ctx.fill(); } },
       { cap: '反向传播：误差信号沿同一条线从右往左回流（橙色），沿途告诉每个权重"往哪边改、改多少"。', dur: 7.5,
         draw(ctx, p) { net(ctx, 2, 1 - Math.min(1, p * 1.2)); } },
