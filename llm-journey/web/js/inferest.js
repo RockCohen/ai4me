@@ -68,10 +68,10 @@ export const InferEst = (function () {
       ctx.fillText(`当前 ${ctxLen.toLocaleString()} token × ${conc} 路 = ${kvGb.toFixed(2)} GB`, 40, 180);
       ctx.strokeStyle = '#ff8080'; ctx.setLineDash([6, 5]);
       const budget = 12 - b.memModel;
-      const xb = 40 + Math.min(1, budget / (b.kvPerTokMB * maxCtx * conc / 1024)) * barMax;
-      ctx.beginPath(); ctx.moveTo(Math.min(xb, 40 + barMax), 50); ctx.lineTo(Math.min(xb, 40 + barMax), 140); ctx.stroke();
+      const xb = Math.max(46, 40 + Math.min(1, budget / (b.kvPerTokMB * maxCtx * conc / 1024)) * barMax);
+      ctx.beginPath(); ctx.moveTo(xb, 50); ctx.lineTo(xb, 140); ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = '#ff8080'; ctx.fillText('预算上限', Math.min(xb - 20, 40 + barMax - 60), 164);
+      ctx.fillStyle = '#ff8080'; ctx.fillText('预算上限', xb - 24, 164);
     }
     $('.ie-local').onclick = () => { backend = 'local'; $('.ie-local').classList.add('primary'); $('.ie-colab').classList.remove('primary'); render(); };
     $('.ie-colab').onclick = () => { backend = 'colab'; $('.ie-colab').classList.add('primary'); $('.ie-local').classList.remove('primary'); render(); };

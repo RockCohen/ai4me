@@ -52,12 +52,13 @@ export const Anim = (function () {
       }
       ctx.globalAlpha = 1;
     }
-    function rowCells(ctx, vals, y, alpha = 1, ghost = false) {
+    function rowCells(ctx, vals, y, alpha = 1, ghost = false, solid = false) {
       ctx.globalAlpha = alpha;
       for (let j = 0; j < vals.length; j++) {
         const x = ax + j * cw;
+        if (solid) { ctx.fillStyle = '#0f1728'; ctx.fillRect(x, y, cw - 8, chh - 8); } // 盖住下层旧值
         if (ghost) ctx.setLineDash([6, 5]);
-        box(ctx, x, y, cw - 8, chh - 8, ghost ? 'rgba(251,146,60,0.28)' : 'rgba(251,146,60,0.16)',
+        box(ctx, x, y, cw - 8, chh - 8, ghost ? 'rgba(251,146,60,0.22)' : 'rgba(251,146,60,0.16)',
           ghost ? 'rgba(251,146,60,0.85)' : 'rgba(251,146,60,0.75)', 9);
         ctx.setLineDash([]);
         text(ctx, String(vals[j]), x + (cw - 8) / 2, y + (chh - 8) / 2 + 6, '#ffd9a8', 17, 'center', true, true);
@@ -76,7 +77,7 @@ export const Anim = (function () {
       if (hiIdx2 >= 0 && p > 0.4) {
         ctx.strokeStyle = '#ffb86b'; ctx.lineWidth = 2;
         ctx.strokeRect(bx + 52, by + 28, 36, 34);
-        text(ctx, '↑ 补 1', bx + 100, by + 52, '#ffb86b', 13);
+        text(ctx, '← 补 1', bx + 96, by + 16, '#ffb86b', 13);
       }
     }
     function checks(ctx, pairs, p, failIdx) {
@@ -113,13 +114,14 @@ export const Anim = (function () {
         draw(ctx, p) {
           text(ctx, 'a，形状 (3, 4)', ax, ay - 14, '#8b96ad', 14);
           grid(ctx, A);
-          // 幽灵行：b 逻辑复制到第 1、2 行
-          rowCells(ctx, B, ay + chh, 0.55 + 0.35 * Math.min(1, p * 1.5), true);
-          rowCells(ctx, B, ay + 2 * chh, 0.55 + 0.35 * Math.min(1, p * 1.5), true);
+          const fade = 0.55 + 0.35 * Math.min(1, p * 1.5);
+          // 幽灵行：先用底色盖住原值，再画 b 的值（不出现文字叠文字）
+          rowCells(ctx, B, ay + chh, fade, true, true);
+          rowCells(ctx, B, ay + 2 * chh, fade, true, true);
           text(ctx, 'b，形状 (4,)', ax, 464, '#8b96ad', 14);
           rowCells(ctx, B, 478);
           arrow(ctx, ax + 3 * cw - 40, 470, ax + 3 * cw - 40, ay + 2 * chh + 6, 'rgba(251,146,60,0.7)', 2);
-          text(ctx, '逻辑复制（不占内存）', ax + 3 * cw - 10, 400, 'rgba(251,146,60,0.9)', 12.5);
+          text(ctx, '逻辑复制（不占内存）', ax + 3 * cw + 4, 402, 'rgba(251,146,60,0.9)', 12.5);
           checks(ctx, [[4, 4], [3, 1]], p, -1);
         } },
       { cap: '相加：结果的每个格子 = a 的格子 + 对应的 b 值，结果形状 (3, 4) ✓', dur: 6,
@@ -131,7 +133,7 @@ export const Anim = (function () {
             const idx = i * 4 + j;
             if (idx >= shown) continue;
             const x = ax + j * cw, y = ay + i * chh;
-            box(ctx, x, y, cw - 8, chh - 8, 'rgba(94,234,212,0.18)', 'rgba(94,234,212,0.55)', 9);
+            box(ctx, x, y, cw - 8, chh - 8, '#0e2430', 'rgba(94,234,212,0.55)', 9);
             text(ctx, String(A[i][j] + B[j]), x + (cw - 8) / 2, y + (chh - 8) / 2 + 6, '#5eead4', 17, 'center', true, true);
           }
         } },
@@ -232,9 +234,9 @@ export const Anim = (function () {
   function chainDiamondScenes() {
     const W = 980, H = 560;
     const N = {
-      a: { x: 140, y: 130, name: 'a', val: 2 },
+      a: { x: 140, y: 140, name: 'a', val: 2 },
+      c: { x: 140, y: 295, name: 'c', val: 0.5 },
       b: { x: 140, y: 450, name: 'b', val: -1 },
-      c: { x: 460, y: 450, name: 'c', val: 0.5 },
       pab: { x: 400, y: 140, name: 'a·b', val: -2 },
       pac: { x: 400, y: 295, name: 'a·c', val: 1 },
       pbc: { x: 400, y: 450, name: 'b·c', val: -0.5 },
