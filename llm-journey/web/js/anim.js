@@ -53,10 +53,15 @@ export const Anim = (function () {
       ctx.globalAlpha = 1;
     }
     function rowCells(ctx, vals, y, alpha = 1, ghost = false, solid = false) {
-      ctx.globalAlpha = alpha;
       for (let j = 0; j < vals.length; j++) {
         const x = ax + j * cw;
-        if (solid) { ctx.fillStyle = '#0f1728'; ctx.fillRect(x, y, cw - 8, chh - 8); } // 盖住下层旧值
+        if (solid) {
+          // 底色以完全不透明绘制，真正盖住下层的旧数值，样式再淡入
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = '#101a2b';
+          ctx.fillRect(x, y, cw - 8, chh - 8);
+          ctx.globalAlpha = alpha;
+        }
         if (ghost) ctx.setLineDash([6, 5]);
         box(ctx, x, y, cw - 8, chh - 8, ghost ? 'rgba(251,146,60,0.22)' : 'rgba(251,146,60,0.16)',
           ghost ? 'rgba(251,146,60,0.85)' : 'rgba(251,146,60,0.75)', 9);
@@ -70,14 +75,15 @@ export const Anim = (function () {
     }
     // 右侧对齐演算区
     function alignBlock(ctx, line1, line2, hiIdx2, ok, p) {
-      const bx = 640, by = 130;
-      text(ctx, '第一步：右对齐，短的左边补 1', bx, by - 30, '#8b96ad', 14);
+      const bx = 640, by = 150;
+      text(ctx, '第一步：右对齐，短的左边补 1', bx, by - 34, '#8b96ad', 14);
       text(ctx, line1, bx + 60, by + 12, '#dbe4f3', 26, 'left', true, true);
-      text(ctx, line2, bx + 60, by + 52, '#ffb86b', 26, 'left', true, true);
+      text(ctx, line2, bx + 60, by + 58, '#ffb86b', 26, 'left', true, true);
       if (hiIdx2 >= 0 && p > 0.4) {
+        // 高亮 line2 开头补出来的 "1"
         ctx.strokeStyle = '#ffb86b'; ctx.lineWidth = 2;
-        ctx.strokeRect(bx + 52, by + 28, 36, 34);
-        text(ctx, '← 补 1', bx + 96, by + 16, '#ffb86b', 13);
+        ctx.strokeRect(bx + 52, by + 32, 42, 42);
+        text(ctx, '← 补出来的 1', bx + 190, by + 58, '#ffb86b', 13.5);
       }
     }
     function checks(ctx, pairs, p, failIdx) {
@@ -133,7 +139,9 @@ export const Anim = (function () {
             const idx = i * 4 + j;
             if (idx >= shown) continue;
             const x = ax + j * cw, y = ay + i * chh;
-            box(ctx, x, y, cw - 8, chh - 8, '#0e2430', 'rgba(94,234,212,0.55)', 9);
+            ctx.fillStyle = '#102430';                       // 不透明底，盖住 a 的旧值
+            ctx.fillRect(x, y, cw - 8, chh - 8);
+            box(ctx, x, y, cw - 8, chh - 8, 'rgba(94,234,212,0.18)', 'rgba(94,234,212,0.55)', 9);
             text(ctx, String(A[i][j] + B[j]), x + (cw - 8) / 2, y + (chh - 8) / 2 + 6, '#5eead4', 17, 'center', true, true);
           }
         } },
