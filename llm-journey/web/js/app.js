@@ -1,4 +1,7 @@
 // app.js — 课程平台骨架：侧栏路由、双视图（阅读/模拟器）、进度记录
+import katex from 'katex';
+import renderMathInElement from 'katex/contrib/auto-render';
+import 'katex/dist/katex.min.css';
 import { CHAPTERS } from './chapters.js';
 import { Quiz } from './quiz.js';
 import { TensorSim } from './tensorsim.js';
@@ -131,6 +134,14 @@ import { Anim } from './anim.js';
       ${ch.sim ? '<div id="tab-sim" class="tabpane" style="display:none"></div>' : ''}`;
 
     Quiz.mount(document.getElementById('quiz'), ch.id, ch.quiz);
+    // 公式渲染：$...$ 行内，$$...$$ 独立成行（KaTeX，加载自本地 npm 依赖）
+    renderMathInElement(document.getElementById('tab-read'), {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '$', right: '$', display: false },
+      ],
+      throwOnError: false,
+    });
 
     const doneBtn = document.getElementById('done-btn');
     function refreshDone() {
